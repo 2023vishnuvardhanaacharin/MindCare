@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindCare — AI Student Wellness Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #bc8cff;
+    --accent3: #56d364;
+    --warn: #f85149;
+    --amber: #e3b341;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --text3: #6e7681;
+    --radius: 14px;
+    --shadow: 0 4px 32px rgba(0,0,0,0.5);
+  }
+  [data-theme="light"] {
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --surface2: #e8edf3;
+    --border: #d0d7de;
+    --text: #1f2328;
+    --text2: #656d76;
+    --text3: #9198a1;
+    --shadow: 0 4px 24px rgba(0,0,0,0.1);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text); transition:background .3s,color .3s; min-height:100vh; }
+  h1,h2,h3,h4 { font-family:'Sora',sans-serif; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:var(--surface); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  /* ===== HEADER ===== */
+  header {
+    position:fixed; top:0; left:0; right:0; z-index:1000;
+    background:rgba(13,17,23,0.85); backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 24px; height:60px;
+  }
+  [data-theme="light"] header { background:rgba(240,244,248,0.85); }
+  .logo { display:flex; align-items:center; gap:10px; font-family:'Sora',sans-serif; font-weight:700; font-size:1.1rem; }
+  .logo-icon { width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,#58a6ff,#bc8cff); display:flex; align-items:center; justify-content:center; font-size:1.1rem; }
+  .header-right { display:flex; align-items:center; gap:12px; }
+  select.lang-select {
+    background:var(--surface2); border:1px solid var(--border); color:var(--text);
+    padding:6px 10px; border-radius:8px; font-family:'Nunito',sans-serif; font-size:.85rem; cursor:pointer;
+  }
+  .theme-btn {
+    background:var(--surface2); border:1px solid var(--border); color:var(--text);
+    width:36px; height:36px; border-radius:8px; cursor:pointer; font-size:1rem;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .nav-links { display:flex; gap:4px; }
+  .nav-btn {
+    background:none; border:none; color:var(--text2); padding:6px 12px;
+    border-radius:8px; cursor:pointer; font-family:'Nunito',sans-serif; font-size:.88rem; font-weight:600;
+    transition:all .2s;
+  }
+  .nav-btn:hover, .nav-btn.active { background:var(--surface2); color:var(--text); }
+
+  /* ===== SIDEBAR ===== */
+  .layout { display:flex; padding-top:60px; min-height:100vh; }
+  .sidebar {
+    width:220px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border);
+    position:fixed; top:60px; bottom:0; left:0; overflow-y:auto; padding:16px 12px;
+    display:flex; flex-direction:column; gap:4px; transform:translateX(0); transition:transform .3s;
+  }
+  .sidebar.hidden { transform:translateX(-220px); }
+  .sidebar-label { font-size:.7rem; font-weight:700; color:var(--text3); letter-spacing:.08em; text-transform:uppercase; padding:12px 8px 4px; }
+  .sidebar-btn {
+    display:flex; align-items:center; gap:10px; padding:9px 10px;
+    border-radius:10px; cursor:pointer; color:var(--text2); font-size:.88rem; font-weight:600;
+    transition:all .2s; border:none; background:none; width:100%; text-align:left;
+  }
+  .sidebar-btn:hover { background:var(--surface2); color:var(--text); }
+  .sidebar-btn.active { background:linear-gradient(135deg,rgba(88,166,255,0.15),rgba(188,140,255,0.15)); color:var(--accent); border:1px solid rgba(88,166,255,0.2); }
+  .sidebar-icon { font-size:1.1rem; width:22px; text-align:center; }
+
+  /* ===== MAIN ===== */
+  .main { flex:1; margin-left:220px; padding:28px; transition:margin .3s; }
+  .main.full { margin-left:0; }
+
+  /* ===== PAGES ===== */
+  .page { display:none; animation:fadeIn .3s ease; }
+  .page.active { display:block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ===== CARDS ===== */
+  .card {
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:24px; box-shadow:var(--shadow);
+  }
+  .card-sm { padding:16px; border-radius:10px; }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  .mb-16 { margin-bottom:16px; }
+  .mb-24 { margin-bottom:24px; }
+
+  /* ===== STAT CARD ===== */
+  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+  .stat-value { font-family:'Sora',sans-serif; font-size:2rem; font-weight:700; }
+  .stat-label { color:var(--text2); font-size:.85rem; margin-top:4px; }
+  .stat-delta { font-size:.78rem; margin-top:8px; }
+  .delta-up { color:var(--accent3); }
+  .delta-down { color:var(--warn); }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    display:inline-flex; align-items:center; gap:8px;
+    padding:10px 20px; border-radius:10px; font-family:'Nunito',sans-serif;
+    font-weight:700; font-size:.9rem; cursor:pointer; border:none; transition:all .2s;
+  }
+  .btn-primary { background:linear-gradient(135deg,#58a6ff,#bc8cff); color:#fff; }
+  .btn-primary:hover { opacity:.88; transform:translateY(-1px); }
+  .btn-ghost { background:var(--surface2); border:1px solid var(--border); color:var(--text); }
+  .btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
+  .btn-danger { background:rgba(248,81,73,0.15); border:1px solid rgba(248,81,73,0.3); color:var(--warn); }
+  .btn-sm { padding:7px 14px; font-size:.82rem; border-radius:8px; }
+  .btn-success { background:rgba(86,211,100,0.15); border:1px solid rgba(86,211,100,0.3); color:var(--accent3); }
+
+  /* ===== FORM ===== */
+  .form-group { margin-bottom:16px; }
+  .form-label { display:block; font-weight:700; font-size:.85rem; color:var(--text2); margin-bottom:6px; }
+  .form-input {
+    width:100%; background:var(--surface2); border:1px solid var(--border); color:var(--text);
+    padding:10px 14px; border-radius:10px; font-family:'Nunito',sans-serif; font-size:.9rem;
+    transition:border .2s; outline:none;
+  }
+  .form-input:focus { border-color:var(--accent); }
+  .form-textarea { min-height:90px; resize:vertical; }
+  .form-select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b949e' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; }
+
+  /* ===== HOME ===== */
+  .hero {
+    text-align:center; padding:60px 20px 40px;
+    background:radial-gradient(ellipse at 50% 0%, rgba(88,166,255,0.1) 0%, transparent 60%);
+  }
+  .hero h1 { font-size:2.4rem; font-weight:700; line-height:1.2; margin-bottom:16px; }
+  .hero h1 span { background:linear-gradient(135deg,#58a6ff,#bc8cff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .hero p { color:var(--text2); font-size:1.05rem; max-width:540px; margin:0 auto 28px; }
+  .hero-btns { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .feature-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-top:32px; }
+  .feature-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:20px; text-align:center; transition:transform .2s,border-color .2s;
+  }
+  .feature-card:hover { transform:translateY(-4px); border-color:var(--accent); }
+  .feature-icon { font-size:2rem; margin-bottom:12px; }
+  .feature-title { font-weight:700; font-size:.95rem; margin-bottom:6px; }
+  .feature-desc { color:var(--text2); font-size:.82rem; line-height:1.5; }
+
+  /* ===== LOGIN ===== */
+  .auth-container { max-width:420px; margin:40px auto; }
+  .auth-tabs { display:flex; background:var(--surface2); border-radius:10px; padding:4px; margin-bottom:20px; }
+  .auth-tab { flex:1; padding:8px; border-radius:8px; border:none; background:none; color:var(--text2); font-family:'Nunito',sans-serif; font-weight:700; cursor:pointer; transition:all .2s; }
+  .auth-tab.active { background:var(--surface); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,0.2); }
+  .auth-form { display:none; }
+  .auth-form.active { display:block; }
+  .role-select-btns { display:flex; gap:8px; margin-bottom:16px; }
+  .role-btn { flex:1; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--surface2); color:var(--text2); cursor:pointer; font-family:'Nunito',sans-serif; font-weight:700; transition:all .2s; text-align:center; }
+  .role-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(88,166,255,0.1); }
+  .consent-row { display:flex; gap:10px; align-items:flex-start; font-size:.82rem; color:var(--text2); margin-bottom:16px; }
+  .consent-row input { margin-top:3px; flex-shrink:0; }
+
+  /* ===== DASHBOARD ===== */
+  .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+  .page-title { font-size:1.5rem; font-weight:700; }
+  .page-subtitle { color:var(--text2); font-size:.88rem; margin-top:2px; }
+  .mood-ring { display:flex; gap:8px; flex-wrap:wrap; }
+  .mood-chip {
+    padding:8px 16px; border-radius:20px; font-size:.85rem; font-weight:700; cursor:pointer;
+    border:2px solid transparent; transition:all .2s; background:var(--surface2);
+  }
+  .mood-chip:hover { transform:scale(1.05); }
+  .mood-chip.happy { border-color:#56d364; color:#56d364; }
+  .mood-chip.neutral { border-color:#58a6ff; color:#58a6ff; }
+  .mood-chip.stressed { border-color:#e3b341; color:#e3b341; }
+  .mood-chip.anxious { border-color:#bc8cff; color:#bc8cff; }
+  .mood-chip.lonely { border-color:#f85149; color:#f85149; }
+  .mood-chip.selected { opacity:1; }
+  .mood-chip:not(.selected) { opacity:.5; }
+  .mood-chip:not(.selected):hover { opacity:.8; }
+  .insight-banner {
+    display:flex; align-items:flex-start; gap:14px; padding:18px;
+    background:linear-gradient(135deg,rgba(88,166,255,0.08),rgba(188,140,255,0.08));
+    border:1px solid rgba(88,166,255,0.2); border-radius:var(--radius);
+  }
+  .insight-icon { font-size:1.8rem; flex-shrink:0; }
+
+  /* ===== CHECK-IN ===== */
+  .emoji-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin:16px 0; }
+  .emoji-btn {
+    padding:16px 8px; border-radius:var(--radius); border:2px solid var(--border);
+    background:var(--surface2); cursor:pointer; text-align:center; transition:all .2s;
+  }
+  .emoji-btn:hover { border-color:var(--accent); transform:scale(1.05); }
+  .emoji-btn.selected { border-color:var(--accent); background:rgba(88,166,255,0.1); transform:scale(1.05); }
+  .emoji-btn .emoji { font-size:2rem; display:block; margin-bottom:6px; }
+  .emoji-btn .label { font-size:.75rem; font-weight:700; color:var(--text2); }
+  .slider-container { margin:12px 0; }
+  .stress-slider { width:100%; accent-color:var(--accent); cursor:pointer; }
+  .slider-labels { display:flex; justify-content:space-between; font-size:.75rem; color:var(--text3); margin-top:4px; }
+  .stress-indicator { display:flex; gap:6px; margin-top:10px; }
+  .stress-dot { width:24px; height:8px; border-radius:4px; background:var(--surface2); transition:all .3s; }
+  .stress-dot.active-1 { background:#56d364; }
+  .stress-dot.active-2 { background:#8de08f; }
+  .stress-dot.active-3 { background:#e3b341; }
+  .stress-dot.active-4 { background:#f0836c; }
+  .stress-dot.active-5 { background:#f85149; }
+  .checkin-steps { display:flex; gap:8px; margin-bottom:24px; }
+  .step-dot { width:8px; height:8px; border-radius:50%; background:var(--border); transition:all .3s; }
+  .step-dot.done { background:var(--accent3); }
+  .step-dot.current { background:var(--accent); width:24px; border-radius:4px; }
+
+  /* ===== AI SUGGESTIONS ===== */
+  .suggestion-card {
+    display:flex; gap:14px; align-items:flex-start; padding:16px;
+    background:var(--surface2); border-radius:10px; margin-bottom:10px;
+    border-left:4px solid var(--accent); transition:transform .2s;
+  }
+  .suggestion-card:hover { transform:translateX(4px); }
+  .suggestion-card.type-2 { border-left-color:var(--accent2); }
+  .suggestion-card.type-3 { border-left-color:var(--accent3); }
+  .suggestion-card.type-4 { border-left-color:var(--amber); }
+  .sug-icon { font-size:1.5rem; flex-shrink:0; }
+  .sug-title { font-weight:700; font-size:.9rem; margin-bottom:4px; }
+  .sug-text { color:var(--text2); font-size:.83rem; line-height:1.5; }
+  .risk-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:20px; font-size:.78rem; font-weight:700; }
+  .risk-low { background:rgba(86,211,100,0.15); color:var(--accent3); border:1px solid rgba(86,211,100,0.3); }
+  .risk-medium { background:rgba(227,179,65,0.15); color:var(--amber); border:1px solid rgba(227,179,65,0.3); }
+  .risk-high { background:rgba(248,81,73,0.15); color:var(--warn); border:1px solid rgba(248,81,73,0.3); }
+
+  /* ===== CHATBOT ===== */
+  .chat-container { display:flex; flex-direction:column; height:520px; background:var(--surface2); border-radius:var(--radius); border:1px solid var(--border); overflow:hidden; }
+  .chat-header { padding:14px 18px; background:linear-gradient(135deg,rgba(88,166,255,0.1),rgba(188,140,255,0.1)); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; }
+  .bot-avatar { width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,#58a6ff,#bc8cff); display:flex; align-items:center; justify-content:center; font-size:1.1rem; }
+  .bot-status { display:flex; align-items:center; gap:6px; font-size:.78rem; color:var(--text2); margin-top:2px; }
+  .status-dot { width:7px; height:7px; border-radius:50%; background:var(--accent3); animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .chat-messages { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
+  .chat-msg { max-width:75%; padding:10px 14px; border-radius:16px; font-size:.88rem; line-height:1.5; animation:msgIn .25s ease; }
+  @keyframes msgIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .chat-msg.bot { background:var(--surface); border-radius:4px 16px 16px 16px; align-self:flex-start; border:1px solid var(--border); }
+  .chat-msg.user { background:linear-gradient(135deg,#58a6ff,#bc8cff); color:#fff; border-radius:16px 4px 16px 16px; align-self:flex-end; }
+  .chat-quick { display:flex; gap:6px; flex-wrap:wrap; padding:8px 16px; border-top:1px solid var(--border); }
+  .quick-btn { padding:5px 12px; border-radius:16px; border:1px solid var(--border); background:var(--surface); color:var(--text2); font-size:.78rem; cursor:pointer; transition:all .2s; font-family:'Nunito',sans-serif; font-weight:600; }
+  .quick-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .chat-input-row { display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--border); background:var(--surface); }
+  .chat-input { flex:1; background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:10px 14px; border-radius:24px; font-family:'Nunito',sans-serif; font-size:.88rem; outline:none; }
+  .chat-input:focus { border-color:var(--accent); }
+  .chat-send { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#58a6ff,#bc8cff); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; transition:transform .2s; }
+  .chat-send:hover { transform:scale(1.1); }
+  .disclaimer { background:rgba(227,179,65,0.08); border:1px solid rgba(227,179,65,0.2); border-radius:8px; padding:10px 14px; font-size:.78rem; color:var(--amber); margin-bottom:14px; display:flex; gap:8px; }
+
+  /* ===== PEER CONNECT ===== */
+  .peer-status-card { text-align:center; padding:40px; background:var(--surface2); border-radius:var(--radius); border:2px dashed var(--border); }
+  .peer-waiting { animation:float 3s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+  .peer-chat-container { display:flex; flex-direction:column; height:420px; background:var(--surface2); border-radius:var(--radius); border:1px solid var(--accent); overflow:hidden; }
+  .safety-banner { background:rgba(86,211,100,0.1); border-bottom:1px solid rgba(86,211,100,0.2); padding:8px 16px; font-size:.78rem; color:var(--accent3); display:flex; gap:8px; align-items:center; }
+
+  /* ===== ADMIN ===== */
+  .heatmap-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .heat-cell { aspect-ratio:1; border-radius:4px; transition:transform .2s; cursor:pointer; }
+  .heat-cell:hover { transform:scale(1.1); }
+  .heat-0 { background:var(--surface2); }
+  .heat-1 { background:rgba(86,211,100,0.3); }
+  .heat-2 { background:rgba(86,211,100,0.6); }
+  .heat-3 { background:rgba(227,179,65,0.6); }
+  .heat-4 { background:rgba(248,81,73,0.4); }
+  .heat-5 { background:rgba(248,81,73,0.8); }
+  .alert-item { display:flex; gap:12px; align-items:flex-start; padding:14px; background:var(--surface2); border-radius:10px; margin-bottom:8px; border-left:3px solid var(--warn); }
+  .alert-time { font-size:.75rem; color:var(--text3); margin-top:2px; }
+  .table { width:100%; border-collapse:collapse; font-size:.85rem; }
+  .table th { padding:10px 14px; background:var(--surface2); color:var(--text2); font-weight:700; text-align:left; }
+  .table td { padding:10px 14px; border-top:1px solid var(--border); }
+  .table tr:hover td { background:var(--surface2); }
+
+  /* ===== SETTINGS ===== */
+  .toggle-row { display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid var(--border); }
+  .toggle-label { font-weight:600; font-size:.9rem; }
+  .toggle-desc { font-size:.8rem; color:var(--text2); margin-top:2px; }
+  .toggle { position:relative; width:46px; height:26px; flex-shrink:0; }
+  .toggle input { opacity:0; width:0; height:0; }
+  .toggle-slider { position:absolute; cursor:pointer; inset:0; background:var(--surface2); border-radius:13px; transition:.3s; border:1px solid var(--border); }
+  .toggle-slider:before { position:absolute; content:''; height:18px; width:18px; left:3px; bottom:3px; background:var(--text3); border-radius:50%; transition:.3s; }
+  .toggle input:checked + .toggle-slider { background:var(--accent); border-color:var(--accent); }
+  .toggle input:checked + .toggle-slider:before { transform:translateX(20px); background:#fff; }
+
+  /* ===== NOTIFICATION ===== */
+  .notif-item { display:flex; gap:12px; align-items:flex-start; padding:14px; border-bottom:1px solid var(--border); transition:background .2s; }
+  .notif-item:hover { background:var(--surface2); }
+  .notif-icon { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
+  .notif-icon.green { background:rgba(86,211,100,0.15); }
+  .notif-icon.blue { background:rgba(88,166,255,0.15); }
+  .notif-icon.amber { background:rgba(227,179,65,0.15); }
+  .notif-icon.red { background:rgba(248,81,73,0.15); }
+  .notif-title { font-weight:700; font-size:.88rem; }
+  .notif-text { font-size:.82rem; color:var(--text2); margin-top:2px; }
+  .notif-time { font-size:.75rem; color:var(--text3); margin-top:4px; }
+  .unread-dot { width:8px; height:8px; border-radius:50%; background:var(--accent); margin-top:4px; flex-shrink:0; }
+
+  /* ===== MOBILE ===== */
+  .hamburger { display:none; background:none; border:none; color:var(--text); font-size:1.3rem; cursor:pointer; }
+  @media (max-width:768px) {
+    .hamburger { display:flex; }
+    .sidebar { transform:translateX(-220px); z-index:999; }
+    .sidebar.open { transform:translateX(0); }
+    .main { margin-left:0; padding:16px; }
+    .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; }
+    .hero h1 { font-size:1.6rem; }
+    .emoji-grid { grid-template-columns:repeat(3,1fr); }
+    .nav-links { display:none; }
+  }
+
+  /* ===== MISC ===== */
+  .section-title { font-size:1.1rem; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:.75rem; font-weight:700; }
+  .badge-blue { background:rgba(88,166,255,0.15); color:var(--accent); }
+  .badge-green { background:rgba(86,211,100,0.15); color:var(--accent3); }
+  .badge-red { background:rgba(248,81,73,0.15); color:var(--warn); }
+  .tag { display:inline-block; padding:3px 10px; border-radius:16px; font-size:.75rem; font-weight:700; background:var(--surface2); color:var(--text2); margin:2px; }
+  .divider { border:none; border-top:1px solid var(--border); margin:20px 0; }
+  .text-center { text-align:center; }
+  .text-muted { color:var(--text2); font-size:.85rem; }
+  .flex { display:flex; }
+  .flex-between { display:flex; justify-content:space-between; align-items:center; }
+  .gap-8 { gap:8px; }
+  .mt-8 { margin-top:8px; }
+  .mt-16 { margin-top:16px; }
+  .mt-24 { margin-top:24px; }
+  .green { color:var(--accent3); }
+  .amber { color:var(--amber); }
+  .red { color:var(--warn); }
+  .blue { color:var(--accent); }
+  .chart-wrap { position:relative; height:220px; }
+  .progress-bar { background:var(--surface2); border-radius:99px; height:8px; overflow:hidden; margin-top:8px; }
+  .progress-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,#58a6ff,#bc8cff); transition:width .5s; }
+</style>
+</head>
+<body data-theme="dark">
+
+<!-- ===== HEADER ===== -->
+<header>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+    <div class="logo">
+      <div class="logo-icon">🧠</div>
+      <span>MindCare</span>
+    </div>
+  </div>
+  <div class="nav-links" id="mainNav">
+    <button class="nav-btn active" onclick="showPage('home',this)">Home</button>
+    <button class="nav-btn" onclick="showPage('login',this)">Login</button>
+  </div>
+  <div class="header-right">
+    <select class="lang-select" id="langSelect" onchange="changeLanguage(this.value)">
+      <option value="en">🌐 English</option>
+      <option value="hi">हिन्दी</option>
+      <option value="mr">मराठी</option>
+      <option value="kn">ಕನ್ನಡ</option>
+      <option value="ta">தமிழ்</option>
+      <option value="te">తెలుగు</option>
+    </select>
+    <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+  </div>
+</header>
+
+<!-- ===== LAYOUT ===== -->
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar hidden" id="sidebar">
+    <div class="sidebar-label" data-lang="main">Main</div>
+    <button class="sidebar-btn active" onclick="showPage('dashboard',this)" data-page="dashboard">
+      <span class="sidebar-icon">🏠</span> <span data-lang="dashboard">Dashboard</span>
+    </button>
+    <button class="sidebar-btn" onclick="showPage('checkin',this)" data-page="checkin">
+      <span class="sidebar-icon">😊</span> <span data-lang="checkin">Check-In</span>
+    </button>
+    <button class="sidebar-btn" onclick="showPage('suggestions',this)" data-page="suggestions">
+      <span class="sidebar-icon">💡</span> <span data-lang="suggestions">AI Suggestions</span>
+    </button>
+    <button class="sidebar-btn" onclick="showPage('chatbot',this)" data-page="chatbot">
+      <span class="sidebar-icon">🤖</span> <span data-lang="chatbot">AI Chatbot</span>
+    </button>
+    <button class="sidebar-btn" onclick="showPage('peer',this)" data-page="peer">
+      <span class="sidebar-icon">👥</span> <span data-lang="peer">Peer Connect</span>
+    </button>
+    <div class="sidebar-label" data-lang="account">Account</div>
+    <button class="sidebar-btn" onclick="showPage('notifications',this)" data-page="notifications">
+      <span class="sidebar-icon">🔔</span> <span data-lang="notifications">Notifications</span>
+      <span class="badge badge-blue" style="margin-left:auto;">3</span>
+    </button>
+    <button class="sidebar-btn" onclick="showPage('settings',this)" data-page="settings">
+      <span class="sidebar-icon">⚙️</span> <span data-lang="settings">Settings</span>
+    </button>
+    <button class="sidebar-btn" onclick="showPage('admin',this)" data-page="admin">
+      <span class="sidebar-icon">🛡️</span> <span data-lang="admin">Admin Panel</span>
+    </button>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main full" id="mainContent">
+
+    <!-- ===== HOME ===== -->
+    <div class="page active" id="page-home">
+      <div class="hero">
+        <h1>Your <span>Mental Wellness</span> Journey Starts Here</h1>
+        <p>AI-powered emotional support, peer connection, and personalized wellness — designed for every student.</p>
+        <div class="hero-btns">
+          <button class="btn btn-primary" onclick="showPage('login')">🚀 Get Started</button>
+          <button class="btn btn-ghost" onclick="showPage('dashboard')">👁️ View Demo</button>
+        </div>
+      </div>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">😊</div>
+          <div class="feature-title" data-lang="feature1-title">Daily Mood Check-In</div>
+          <div class="feature-desc" data-lang="feature1-desc">Log your emotions daily with emoji-based tracking and stress sliders</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <div class="feature-title" data-lang="feature2-title">AI Chatbot Support</div>
+          <div class="feature-desc" data-lang="feature2-desc">24/7 compassionate AI conversations for stress relief and encouragement</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">👥</div>
+          <div class="feature-title" data-lang="feature3-title">Peer Connection</div>
+          <div class="feature-desc" data-lang="feature3-desc">Connect anonymously with peers who understand what you're going through</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title" data-lang="feature4-title">Emotion Analytics</div>
+          <div class="feature-desc" data-lang="feature4-desc">Visual weekly and monthly charts to track your emotional patterns</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <div class="feature-title" data-lang="feature5-title">Privacy First</div>
+          <div class="feature-desc" data-lang="feature5-desc">Your data is encrypted and never shared. Anonymous peer chats, zero stored history</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💡</div>
+          <div class="feature-title" data-lang="feature6-title">AI Wellness Tips</div>
+          <div class="feature-desc" data-lang="feature6-desc">Personalized suggestions based on your mood, stress level, and history</div>
+        </div>
+      </div>
+      <div class="card mt-24 text-center">
+        <h3 style="margin-bottom:8px;">🏛️ Academic Project Notice</h3>
+        <p class="text-muted">This is a college digitalization project. All data shown is simulated for demonstration purposes.</p>
+      </div>
+    </div>
+
+    <!-- ===== LOGIN ===== -->
+    <div class="page" id="page-login">
+      <div class="auth-container">
+        <div class="text-center mb-24">
+          <div style="font-size:3rem;margin-bottom:8px;">🧠</div>
+          <h2>Welcome to MindCare</h2>
+          <p class="text-muted" style="margin-top:6px;">Your safe space for emotional wellness</p>
+        </div>
+        <div class="auth-tabs">
+          <button class="auth-tab active" onclick="switchAuthTab('login',this)">Sign In</button>
+          <button class="auth-tab" onclick="switchAuthTab('signup',this)">Sign Up</button>
+        </div>
+        <!-- Login Form -->
+        <div class="auth-form active card" id="auth-login">
+          <div class="role-select-btns">
+            <div class="role-btn active" onclick="selectRole('student',this)">👨‍🎓 Student</div>
+            <div class="role-btn" onclick="selectRole('counselor',this)">👩‍💼 Counselor</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input class="form-input" type="email" placeholder="student@college.edu">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input class="form-input" type="password" placeholder="••••••••">
+          </div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="doLogin()">Sign In →</button>
+          <p class="text-muted text-center mt-16" style="font-size:.8rem;">Forgot password? <a href="#" style="color:var(--accent);">Reset here</a></p>
+        </div>
+        <!-- Signup Form -->
+        <div class="auth-form card" id="auth-signup">
+          <div class="role-select-btns">
+            <div class="role-btn active" onclick="selectRole('student',this)">👨‍🎓 Student</div>
+            <div class="role-btn" onclick="selectRole('counselor',this)">👩‍💼 Counselor</div>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">First Name</label>
+              <input class="form-input" type="text" placeholder="Arjun">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name</label>
+              <input class="form-input" type="text" placeholder="Sharma">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">College Email</label>
+            <input class="form-input" type="email" placeholder="arjun@college.edu">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Department</label>
+            <select class="form-input form-select">
+              <option>Computer Science</option>
+              <option>Engineering</option>
+              <option>Business</option>
+              <option>Arts & Science</option>
+              <option>Medicine</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input class="form-input" type="password" placeholder="••••••••">
+          </div>
+          <div class="consent-row">
+            <input type="checkbox" id="consent" checked>
+            <label for="consent">I consent to anonymous emotional data collection for wellness analytics. My personal identity will never be shared. I understand this platform is not a substitute for professional mental health care.</label>
+          </div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="doLogin()">Create Account →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== DASHBOARD ===== -->
+    <div class="page" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">👋 Good morning, Arjun!</div>
+          <div class="page-subtitle">Wednesday, February 18, 2026 • Semester 4</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="showPage('checkin')">+ Daily Check-In</button>
+      </div>
+
+      <!-- Today's Mood -->
+      <div class="card mb-16">
+        <div class="flex-between mb-16">
+          <div class="section-title">😊 Today's Mood</div>
+          <span class="badge badge-blue">Updated 9:30 AM</span>
+        </div>
+        <div class="mood-ring">
+          <span class="mood-chip happy selected" onclick="selectMoodChip(this,'happy')">😄 Happy</span>
+          <span class="mood-chip neutral" onclick="selectMoodChip(this,'neutral')">😐 Neutral</span>
+          <span class="mood-chip stressed" onclick="selectMoodChip(this,'stressed')">😰 Stressed</span>
+          <span class="mood-chip anxious" onclick="selectMoodChip(this,'anxious')">😟 Anxious</span>
+          <span class="mood-chip lonely" onclick="selectMoodChip(this,'lonely')">😔 Lonely</span>
+        </div>
+        <div class="mt-16 insight-banner">
+          <div class="insight-icon">✨</div>
+          <div>
+            <div style="font-weight:700;margin-bottom:4px;">AI Insight: Positive Trend!</div>
+            <div class="text-muted" style="font-size:.85rem;">Your mood has improved by 24% this week. Keep maintaining good sleep habits — your check-ins show you feel best after 7+ hours of sleep.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid-4 mb-16">
+        <div class="stat-card">
+          <div class="stat-value green">12</div>
+          <div class="stat-label">🔥 Day Streak</div>
+          <div class="stat-delta delta-up">↑ Keep it up!</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value blue">2</div>
+          <div class="stat-label">📊 Avg Stress Level</div>
+          <div class="stat-delta delta-up">↓ Better than last week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--accent2);">5</div>
+          <div class="stat-label">🤖 Chatbot Sessions</div>
+          <div class="stat-delta">This month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value amber">3</div>
+          <div class="stat-label">👥 Peer Connects</div>
+          <div class="stat-delta delta-up">↑ 1 this week</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="grid-2 mb-16">
+        <div class="card">
+          <div class="section-title">📈 Weekly Mood Chart</div>
+          <div class="chart-wrap"><canvas id="weeklyChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="section-title">📅 Monthly Emotion Distribution</div>
+          <div class="chart-wrap"><canvas id="monthlyChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card">
+        <div class="section-title">⚡ Quick Actions</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-ghost" onclick="showPage('chatbot')">🤖 Talk to AI</button>
+          <button class="btn btn-ghost" onclick="showPage('peer')">👥 Find Peer</button>
+          <button class="btn btn-ghost" onclick="showPage('suggestions')">💡 Get Tips</button>
+          <button class="btn btn-ghost" onclick="showPage('notifications')">🔔 Notifications</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CHECK-IN ===== -->
+    <div class="page" id="page-checkin">
+      <div class="page-header">
+        <div>
+          <div class="page-title">😊 Daily Emotion Check-In</div>
+          <div class="page-subtitle">Takes just 2 minutes • Helps your wellbeing</div>
+        </div>
+      </div>
+      <div class="checkin-steps mb-16">
+        <div class="step-dot current" id="step1"></div>
+        <div class="step-dot" id="step2"></div>
+        <div class="step-dot" id="step3"></div>
+        <div class="step-dot" id="step4"></div>
+      </div>
+
+      <div class="card mb-16" id="checkin-step1">
+        <div class="section-title">Step 1: How are you feeling right now?</div>
+        <div class="emoji-grid">
+          <div class="emoji-btn" onclick="selectEmoji(this,'😄','Happy')"><span class="emoji">😄</span><span class="label">Happy</span></div>
+          <div class="emoji-btn" onclick="selectEmoji(this,'😎','Confident')"><span class="emoji">😎</span><span class="label">Confident</span></div>
+          <div class="emoji-btn" onclick="selectEmoji(this,'😐','Neutral')"><span class="emoji">😐</span><span class="label">Neutral</span></div>
+          <div class="emoji-btn" onclick="selectEmoji(this,'😴','Tired')"><span class="emoji">😴</span><span class="label">Tired</span></div>
+          <div class="emoji-btn" onclick="selectEmoji(this,'😰','Stressed')"><span class="emoji">😰</span><span class="label">Stressed</span></div>
+          <div class="emoji-btn" onclick="selectEmoji(this,'😟','Anxious')"><span class="emoji">😟</span><span class="label">Anxious</span></div>
+          <div class="emoji-btn" onclick="selectEmoji(this,'😔','Lonely')"><span class="emoji">😔</span><span class="label">Lonely</span></div>
+          <div class="emoji-btn" onclick="selectEmoji(this,'😤','Frustrated')"><span class="emoji">😤</span><span class="label">Frustrated</span></div>
+          <div class="emoji-btn" onclick="selectEmoji(this,'🥺','Overwhelmed')"><span class="emoji">🥺</span><span class="label">Overwhelmed</span></div>
+          <div class="emoji-btn" onclick="selectEmoji(this,'🤩','Excited')"><span class="emoji">🤩</span><span class="label">Excited</span></div>
+        </div>
+        <button class="btn btn-primary" onclick="nextStep(2)">Next →</button>
+      </div>
+
+      <div class="card mb-16" id="checkin-step2" style="display:none;">
+        <div class="section-title">Step 2: Stress Level (1 = Low, 5 = High)</div>
+        <div class="slider-container">
+          <input type="range" class="stress-slider" id="stressSlider" min="1" max="5" value="2" oninput="updateStress(this.value)">
+          <div class="slider-labels"><span>😌 Very Calm</span><span>😰 Very Stressed</span></div>
+        </div>
+        <div class="stress-indicator" id="stressIndicator">
+          <div class="stress-dot active-2"></div>
+          <div class="stress-dot"></div>
+          <div class="stress-dot"></div>
+          <div class="stress-dot"></div>
+          <div class="stress-dot"></div>
+        </div>
+        <div style="font-size:.85rem;color:var(--text2);margin-top:8px;">Current Level: <strong id="stressVal" class="blue">2 — Low Stress</strong></div>
+        <div style="margin-top:16px;">
+          <button class="btn btn-ghost btn-sm" onclick="nextStep(1)">← Back</button>
+          <button class="btn btn-primary btn-sm" style="margin-left:8px;" onclick="nextStep(3)">Next →</button>
+        </div>
+      </div>
+
+      <div class="card mb-16" id="checkin-step3" style="display:none;">
+        <div class="section-title">Step 3: Tell us more (optional)</div>
+        <textarea class="form-input form-textarea" placeholder="How are you feeling today? What's on your mind? Share as much or as little as you like..." id="feelingText"></textarea>
+        <div style="font-size:.8rem;color:var(--text3);margin-top:6px;">🔒 This is private and encrypted. Only used for your AI insights.</div>
+        <div style="margin-top:16px;">
+          <button class="btn btn-ghost btn-sm" onclick="nextStep(2)">← Back</button>
+          <button class="btn btn-primary btn-sm" style="margin-left:8px;" onclick="nextStep(4)">Analyze →</button>
+        </div>
+      </div>
+
+      <div class="card" id="checkin-step4" style="display:none;">
+        <div class="section-title">✅ Check-In Complete!</div>
+        <div class="insight-banner mt-16">
+          <div class="insight-icon">🎉</div>
+          <div>
+            <div style="font-weight:700;margin-bottom:4px;">Great job checking in!</div>
+            <div class="text-muted" style="font-size:.85rem;">Based on your responses, your risk level is <strong class="green">Low</strong>. We've generated personalized suggestions for you.</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="showPage('suggestions')">💡 See Suggestions</button>
+          <button class="btn btn-ghost" onclick="showPage('chatbot')">🤖 Talk to AI</button>
+          <button class="btn btn-ghost" onclick="showPage('dashboard')">🏠 Dashboard</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== AI SUGGESTIONS ===== -->
+    <div class="page" id="page-suggestions">
+      <div class="page-header">
+        <div>
+          <div class="page-title">💡 AI Wellness Suggestions</div>
+          <div class="page-subtitle">Personalized for you based on today's check-in</div>
+        </div>
+        <span class="risk-badge risk-low">● Low Risk</span>
+      </div>
+
+      <div class="grid-2 mb-16">
+        <div class="card">
+          <div class="section-title">🧠 AI Analysis</div>
+          <div style="margin-bottom:12px;"><span class="tag">😄 Happy</span><span class="tag">Stress: 2/5</span><span class="tag">Positive Trend</span></div>
+          <div class="text-muted" style="font-size:.85rem;line-height:1.6;">Your emotional pattern this week shows a positive upward trend. Your keywords indicate optimism and mild academic pressure. Sentiment score: <strong class="green">+0.72</strong></div>
+          <div style="margin-top:12px;">
+            <div style="font-size:.82rem;font-weight:700;margin-bottom:4px;">Emotion Classification</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:72%;background:linear-gradient(90deg,#56d364,#58a6ff);"></div></div>
+            <div style="font-size:.75rem;color:var(--text2);margin-top:4px;">Positive Sentiment: 72%</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-title">📊 This Week's Emotions</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="flex-between"><span style="font-size:.85rem;">😄 Happy</span><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:120px;"><div class="progress-fill" style="width:65%;background:#56d364;"></div></div><span class="text-muted" style="font-size:.8rem;">65%</span></div></div>
+            <div class="flex-between"><span style="font-size:.85rem;">😐 Neutral</span><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:120px;"><div class="progress-fill" style="width:20%;background:#58a6ff;"></div></div><span class="text-muted" style="font-size:.8rem;">20%</span></div></div>
+            <div class="flex-between"><span style="font-size:.85rem;">😰 Stressed</span><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:120px;"><div class="progress-fill" style="width:10%;background:#e3b341;"></div></div><span class="text-muted" style="font-size:.8rem;">10%</span></div></div>
+            <div class="flex-between"><span style="font-size:.85rem;">😟 Anxious</span><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:120px;"><div class="progress-fill" style="width:5%;background:#bc8cff;"></div></div><span class="text-muted" style="font-size:.8rem;">5%</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">🌟 Personalized Recommendations</div>
+      <div class="suggestion-card">
+        <div class="sug-icon">🧘</div>
+        <div><div class="sug-title">5-Minute Mindfulness Break</div><div class="sug-text">Your energy seems high! Channel it with a quick breathing exercise: inhale 4 counts, hold 4, exhale 4. Do this 3 times between study sessions to maintain your positive flow.</div></div>
+      </div>
+      <div class="suggestion-card type-2">
+        <div class="sug-icon">📚</div>
+        <div><div class="sug-title">Pomodoro Study Technique</div><div class="sug-text">With your current moderate stress level, try studying in 25-minute focused blocks with 5-minute breaks. Your brain retains information 40% better with regular breaks.</div></div>
+      </div>
+      <div class="suggestion-card type-3">
+        <div class="sug-icon">🏃</div>
+        <div><div class="sug-title">Physical Activity Boost</div><div class="sug-text">A 20-minute walk or light exercise today can boost your already positive mood by releasing endorphins. Consider the campus garden or gym.</div></div>
+      </div>
+      <div class="suggestion-card type-4">
+        <div class="sug-icon">🌙</div>
+        <div><div class="sug-title">Sleep Hygiene Reminder</div><div class="sug-text">Your best moods correlate with 7-8 hours of sleep. Try to wind down by 10:30 PM tonight. Avoid screens 30 minutes before bed.</div></div>
+      </div>
+      <div class="suggestion-card">
+        <div class="sug-icon">👥</div>
+        <div><div class="sug-title">Social Connection</div><div class="sug-text">Happy people who share positivity spread wellbeing. Consider connecting with a peer today — your uplifted state can genuinely help someone who may be struggling.</div></div>
+      </div>
+      <div style="margin-top:16px;padding:14px;background:rgba(248,81,73,0.05);border:1px solid rgba(248,81,73,0.15);border-radius:10px;font-size:.8rem;color:var(--text2);">
+        ⚕️ <strong>Medical Disclaimer:</strong> These suggestions are general wellness tips and are not medical advice. If you're struggling, please reach out to your campus counselor.
+      </div>
+    </div>
+
+    <!-- ===== CHATBOT ===== -->
+    <div class="page" id="page-chatbot">
+      <div class="page-header">
+        <div>
+          <div class="page-title">🤖 AI Wellness Chatbot</div>
+          <div class="page-subtitle">Available 24/7 • Not a medical professional</div>
+        </div>
+      </div>
+      <div class="disclaimer">
+        ⚠️ <span><strong>Disclaimer:</strong> This chatbot is NOT a medical professional. For emergencies, call iCall: 9152987821 or contact your campus counselor.</span>
+      </div>
+      <div class="chat-container">
+        <div class="chat-header">
+          <div class="bot-avatar">🧠</div>
+          <div>
+            <div style="font-weight:700;font-size:.9rem;">MindCare AI</div>
+            <div class="bot-status"><div class="status-dot"></div>Online • Responds instantly</div>
+          </div>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-msg bot">Hello! 👋 I'm MindCare AI, your wellness companion. I'm here to listen and support you. How are you feeling today?</div>
+          <div class="chat-msg bot">You can share what's on your mind, ask for stress tips, or just have a supportive conversation. Everything here is <strong>private and confidential</strong>. 🔒</div>
+        </div>
+        <div class="chat-quick">
+          <button class="quick-btn" onclick="sendQuick('I feel stressed about exams')">😰 Exam Stress</button>
+          <button class="quick-btn" onclick="sendQuick('I feel lonely')">😔 Feeling Lonely</button>
+          <button class="quick-btn" onclick="sendQuick('Give me a breathing exercise')">🧘 Breathing Exercise</button>
+          <button class="quick-btn" onclick="sendQuick('I need motivation')">⚡ Motivation</button>
+          <button class="quick-btn" onclick="sendQuick('Suggest a study break')">☕ Study Break</button>
+        </div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter')sendChat()">
+          <button class="chat-send" onclick="sendChat()">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PEER CONNECT ===== -->
+    <div class="page" id="page-peer">
+      <div class="page-header">
+        <div>
+          <div class="page-title">👥 Talk to Someone Like You</div>
+          <div class="page-subtitle">Anonymous peer connection • Safe & monitored</div>
+        </div>
+      </div>
+      <div class="disclaimer">⚠️ <span>All chats are <strong>anonymous</strong>. No names or IDs are shared. Emergency support is available if needed. Harmful messages are auto-filtered.</span></div>
+
+      <div id="peer-lobby">
+        <div class="card mb-16">
+          <div class="section-title">🔍 Find Your Match</div>
+          <p class="text-muted mb-16">Connect with another student experiencing similar emotions. Matching is based on your current mood and stress level.</p>
+          <div class="grid-2">
+            <div>
+              <div class="form-label">Your current mood</div>
+              <select class="form-input form-select" id="peerMood">
+                <option>😰 Stressed</option>
+                <option>😔 Lonely</option>
+                <option>😟 Anxious</option>
+                <option>😐 Neutral</option>
+                <option>😴 Tired</option>
+              </select>
+            </div>
+            <div>
+              <div class="form-label">Stress Level</div>
+              <select class="form-input form-select" id="peerStress">
+                <option>High (4-5)</option>
+                <option>Medium (2-3)</option>
+                <option>Low (1)</option>
+              </select>
+            </div>
+          </div>
+          <div class="consent-row mt-16">
+            <input type="checkbox" id="peerConsent" checked>
+            <label for="peerConsent">I consent to an anonymous peer chat. I understand no personal information will be shared. I will be respectful and supportive.</label>
+          </div>
+          <button class="btn btn-primary mt-16" onclick="startPeerSearch()">🔍 Find a Peer</button>
+        </div>
+        <div class="card">
+          <div class="section-title">🛡️ Safety Guidelines</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:.85rem;color:var(--text2);">
+            <div>✅ Be kind and supportive to your peer</div>
+            <div>✅ Share feelings, not personal contact details</div>
+            <div>✅ End the chat anytime — no pressure</div>
+            <div>❌ No sharing of phone numbers, social media, or real names</div>
+            <div>❌ No harmful, abusive, or inappropriate language</div>
+            <div>🆘 If you see distress signals, help will appear automatically</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="peer-searching" style="display:none;">
+        <div class="peer-status-card">
+          <div class="peer-waiting" style="font-size:4rem;margin-bottom:16px;">🔍</div>
+          <h3 style="margin-bottom:8px;">Finding your match...</h3>
+          <p class="text-muted">Looking for a peer with similar emotions. Usually takes 30-60 seconds.</p>
+          <div style="margin-top:20px;display:flex;gap:8px;justify-content:center;">
+            <span class="tag">😰 Stressed</span><span class="tag">High Stress</span>
+          </div>
+          <button class="btn btn-ghost mt-16" onclick="cancelSearch()">Cancel</button>
+        </div>
+      </div>
+
+      <div id="peer-chat" style="display:none;">
+        <div class="peer-chat-container">
+          <div class="chat-header">
+            <div class="bot-avatar" style="background:linear-gradient(135deg,#56d364,#58a6ff);">👤</div>
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:.9rem;">Anonymous Peer</div>
+              <div class="bot-status"><div class="status-dot"></div>Connected • Feeling similar to you</div>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="endPeerChat()">End Chat</button>
+          </div>
+          <div class="safety-banner">🛡️ Chat is anonymous • No history stored • Stay safe & kind</div>
+          <div class="chat-messages" id="peerMessages">
+            <div class="chat-msg bot">👋 Hi! We're both going through similar feelings. You're not alone. Feel free to share — I'm here to listen.</div>
+          </div>
+          <div class="chat-input-row">
+            <input class="chat-input" id="peerInput" placeholder="Say something supportive..." onkeypress="if(event.key==='Enter')sendPeerMsg()">
+            <button class="chat-send" onclick="sendPeerMsg()">➤</button>
+          </div>
+        </div>
+        <div style="font-size:.78rem;color:var(--text3);text-align:center;margin-top:10px;">
+          🔒 Messages are not stored permanently. Session ends when either user leaves.
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ADMIN ===== -->
+    <div class="page" id="page-admin">
+      <div class="page-header">
+        <div>
+          <div class="page-title">🛡️ Counselor / Admin Dashboard</div>
+          <div class="page-subtitle">Anonymized analytics • No access to private messages</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm">📥 Export CSV</button>
+          <span class="badge badge-red">⚠️ 2 High Risk Alerts</span>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid-4 mb-16">
+        <div class="stat-card"><div class="stat-value blue">248</div><div class="stat-label">👨‍🎓 Active Students</div><div class="stat-delta delta-up">↑ 12 this week</div></div>
+        <div class="stat-card"><div class="stat-value green">87%</div><div class="stat-label">📊 Check-In Rate</div><div class="stat-delta delta-up">↑ 5% vs last month</div></div>
+        <div class="stat-card"><div class="stat-value amber">2</div><div class="stat-label">⚠️ High Risk Alerts</div><div class="stat-delta delta-down">Needs attention</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:var(--accent2);">1,240</div><div class="stat-label">🤖 Chatbot Sessions</div><div class="stat-delta">This month</div></div>
+      </div>
+
+      <div class="grid-2 mb-16">
+        <!-- Alerts -->
+        <div class="card">
+          <div class="section-title">⚠️ High-Risk Alerts</div>
+          <div class="alert-item">
+            <div>🔴</div>
+            <div>
+              <div style="font-weight:700;font-size:.88rem;">Student #A0472 — High Stress Pattern</div>
+              <div class="text-muted" style="font-size:.82rem;">4 consecutive days of High stress + Lonely mood. Recommend counselor follow-up.</div>
+              <div class="alert-time">2 hours ago • CS Department</div>
+            </div>
+          </div>
+          <div class="alert-item">
+            <div>🔴</div>
+            <div>
+              <div style="font-weight:700;font-size:.88rem;">Student #B0219 — Distress Keyword Detected</div>
+              <div class="text-muted" style="font-size:.82rem;">Chatbot flagged emotional distress keywords during session. Resource was provided automatically.</div>
+              <div class="alert-time">5 hours ago • Engineering Dept</div>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm mt-16">View All Alerts</button>
+        </div>
+
+        <!-- Heatmap -->
+        <div class="card">
+          <div class="section-title">🗺️ Department Stress Heatmap</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="flex-between"><span style="font-size:.85rem;">Computer Science</span><div class="progress-bar" style="width:160px;"><div class="progress-fill" style="width:72%;background:#e3b341;"></div></div><span class="amber" style="font-size:.82rem;">7.2 avg</span></div>
+            <div class="flex-between"><span style="font-size:.85rem;">Engineering</span><div class="progress-bar" style="width:160px;"><div class="progress-fill" style="width:80%;background:#f85149;"></div></div><span class="red" style="font-size:.82rem;">8.0 avg</span></div>
+            <div class="flex-between"><span style="font-size:.85rem;">Business</span><div class="progress-bar" style="width:160px;"><div class="progress-fill" style="width:45%;background:#56d364;"></div></div><span class="green" style="font-size:.82rem;">4.5 avg</span></div>
+            <div class="flex-between"><span style="font-size:.85rem;">Arts & Science</span><div class="progress-bar" style="width:160px;"><div class="progress-fill" style="width:38%;background:#56d364;"></div></div><span class="green" style="font-size:.82rem;">3.8 avg</span></div>
+            <div class="flex-between"><span style="font-size:.85rem;">Medicine</span><div class="progress-bar" style="width:160px;"><div class="progress-fill" style="width:85%;background:#f85149;"></div></div><span class="red" style="font-size:.82rem;">8.5 avg</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Emotion Distribution Table -->
+      <div class="card mb-16">
+        <div class="section-title">📋 Anonymized Emotion Log (Last 7 Days)</div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Department</th>
+              <th>Dominant Mood</th>
+              <th>Avg Stress</th>
+              <th>Risk Level</th>
+              <th>Chatbot Used</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>#A0001</td><td>Computer Science</td><td>😄 Happy</td><td>2</td><td><span class="risk-badge risk-low">Low</span></td><td>✅</td></tr>
+            <tr><td>#A0047</td><td>Engineering</td><td>😰 Stressed</td><td>4</td><td><span class="risk-badge risk-medium">Medium</span></td><td>✅</td></tr>
+            <tr><td>#B0219</td><td>Engineering</td><td>😟 Anxious</td><td>5</td><td><span class="risk-badge risk-high">High</span></td><td>✅</td></tr>
+            <tr><td>#A0472</td><td>Computer Science</td><td>😔 Lonely</td><td>5</td><td><span class="risk-badge risk-high">High</span></td><td>❌</td></tr>
+            <tr><td>#C0088</td><td>Business</td><td>😐 Neutral</td><td>2</td><td><span class="risk-badge risk-low">Low</span></td><td>❌</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Chatbot Analytics -->
+      <div class="card">
+        <div class="section-title">🤖 Chatbot Usage Analytics</div>
+        <div class="chart-wrap"><canvas id="chatbotChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ===== NOTIFICATIONS ===== -->
+    <div class="page" id="page-notifications">
+      <div class="page-header">
+        <div class="page-title">🔔 Notifications</div>
+        <button class="btn btn-ghost btn-sm">Mark all read</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="notif-item">
+          <div class="notif-icon blue">💡</div>
+          <div style="flex:1;">
+            <div class="notif-title">New AI Suggestions Ready</div>
+            <div class="notif-text">Based on today's check-in, we have 5 personalized wellness tips for you.</div>
+            <div class="notif-time">10 minutes ago</div>
+          </div>
+          <div class="unread-dot"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon green">🔥</div>
+          <div style="flex:1;">
+            <div class="notif-title">12-Day Check-In Streak!</div>
+            <div class="notif-text">Amazing! You've maintained a 12-day check-in streak. Keep going for a special badge at 14 days!</div>
+            <div class="notif-time">2 hours ago</div>
+          </div>
+          <div class="unread-dot"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon amber">👥</div>
+          <div style="flex:1;">
+            <div class="notif-title">Peer Chat Ended</div>
+            <div class="notif-text">Your anonymous peer session from yesterday was ended. No chat history has been stored.</div>
+            <div class="notif-time">Yesterday, 8:45 PM</div>
+          </div>
+          <div class="unread-dot"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon green">😊</div>
+          <div style="flex:1;">
+            <div class="notif-title">Weekly Mood Report</div>
+            <div class="notif-text">Your weekly report is ready. Your mood improved 24% this week — great progress!</div>
+            <div class="notif-time">Monday, 9:00 AM</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon blue">🤖</div>
+          <div style="flex:1;">
+            <div class="notif-title">Study Break Reminder</div>
+            <div class="notif-text">It's been 2 hours since your last break. Take 5 minutes to rest your eyes and stretch!</div>
+            <div class="notif-time">Sunday, 3:00 PM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SETTINGS ===== -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-title">⚙️ Settings & Privacy</div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="card mb-16">
+            <div class="section-title">👤 Profile</div>
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input class="form-input" value="Arjun Sharma">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input class="form-input" type="email" value="arjun@college.edu">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Department</label>
+              <select class="form-input form-select">
+                <option selected>Computer Science</option>
+                <option>Engineering</option>
+                <option>Business</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Preferred Language</label>
+              <select class="form-input form-select" onchange="changeLanguage(this.value)">
+                <option value="en" selected>🌐 English</option>
+                <option value="hi">हिन्दी Hindi</option>
+                <option value="mr">मराठी Marathi</option>
+                <option value="kn">ಕನ್ನಡ Kannada</option>
+                <option value="ta">தமிழ் Tamil</option>
+                <option value="te">తెలుగు Telugu</option>
+              </select>
+            </div>
+            <button class="btn btn-primary btn-sm">Save Changes</button>
+          </div>
+
+          <div class="card mb-16">
+            <div class="section-title">🔒 Privacy Controls</div>
+            <div class="toggle-row">
+              <div><div class="toggle-label">Anonymous Analytics</div><div class="toggle-desc">Share anonymized mood data for campus wellness reports</div></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-label">Peer Connect Availability</div><div class="toggle-desc">Allow peers to connect with you when you're online</div></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-label">AI Chatbot History</div><div class="toggle-desc">Store anonymized chatbot session counts (no messages)</div></div>
+              <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card mb-16">
+            <div class="section-title">🔔 Notification Preferences</div>
+            <div class="toggle-row">
+              <div><div class="toggle-label">Daily Check-In Reminder</div><div class="toggle-desc">Remind me to check in every morning</div></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-label">Study Break Alerts</div><div class="toggle-desc">Remind me to take breaks every 2 hours</div></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-label">Weekly Mood Report</div><div class="toggle-desc">Receive weekly emotional wellness summary</div></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div><div class="toggle-label">AI Suggestion Alerts</div><div class="toggle-desc">Notify when new personalized tips are ready</div></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+
+          <div class="card mb-16">
+            <div class="section-title">🎨 Appearance</div>
+            <div class="toggle-row">
+              <div><div class="toggle-label">Dark Mode</div><div class="toggle-desc">Switch between dark and light theme</div></div>
+              <label class="toggle" onclick="toggleTheme()"><input type="checkbox" id="darkToggle" checked><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+
+          <div class="card" style="border-color:rgba(248,81,73,0.3);">
+            <div class="section-title red">🗑️ Data & Account</div>
+            <p class="text-muted" style="font-size:.83rem;margin-bottom:14px;">Permanently delete your emotional data or entire account. This cannot be undone.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-danger btn-sm">Delete My Data</button>
+              <button class="btn btn-danger btn-sm">Delete Account</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ========== STATE ==========
+let currentPage = 'home';
+let currentLang = 'en';
+let isDark = true;
+let selectedEmoji = null;
+let selectedMood = 'happy';
+let chatStep = 1;
+let peerState = 'lobby';
+let peerSearchTimeout = null;
+
+// ========== TRANSLATIONS ==========
+const langs = {
+  en: {
+    dashboard:'Dashboard', checkin:'Check-In', suggestions:'AI Suggestions',
+    chatbot:'AI Chatbot', peer:'Peer Connect', notifications:'Notifications',
+    settings:'Settings', admin:'Admin Panel', main:'Main', account:'Account',
+    'feature1-title':'Daily Mood Check-In','feature1-desc':'Log your emotions daily with emoji-based tracking and stress sliders',
+    'feature2-title':'AI Chatbot Support','feature2-desc':'24/7 compassionate AI conversations for stress relief and encouragement',
+    'feature3-title':'Peer Connection','feature3-desc':'Connect anonymously with peers who understand what you\'re going through',
+    'feature4-title':'Emotion Analytics','feature4-desc':'Visual weekly and monthly charts to track your emotional patterns',
+    'feature5-title':'Privacy First','feature5-desc':'Your data is encrypted and never shared. Anonymous peer chats, zero stored history',
+    'feature6-title':'AI Wellness Tips','feature6-desc':'Personalized suggestions based on your mood, stress level, and history',
+  },
+  hi: {
+    dashboard:'डैशबोर्ड', checkin:'चेक-इन', suggestions:'AI सुझाव',
+    chatbot:'AI चैटबॉट', peer:'सहपाठी जोड़', notifications:'सूचनाएं',
+    settings:'सेटिंग्स', admin:'एडमिन पैनल', main:'मुख्य', account:'खाता',
+    'feature1-title':'दैनिक मूड चेक-इन','feature1-desc':'इमोजी ट्रैकिंग और स्ट्रेस स्लाइडर से अपनी भावनाएं रोज़ रिकॉर्ड करें',
+    'feature2-title':'AI चैटबॉट सहायता','feature2-desc':'तनाव राहत और प्रोत्साहन के लिए 24/7 सहानुभूतिपूर्ण AI बातचीत',
+    'feature3-title':'सहपाठी जोड़','feature3-desc':'अपनी जैसी भावनाओं वाले साथियों से गुमनाम रूप से जुड़ें',
+    'feature4-title':'भावना विश्लेषण','feature4-desc':'अपने भावनात्मक पैटर्न को ट्रैक करने के लिए साप्ताहिक और मासिक चार्ट',
+    'feature5-title':'गोपनीयता पहले','feature5-desc':'आपका डेटा एन्क्रिप्टेड है और कभी साझा नहीं किया जाता',
+    'feature6-title':'AI वेलनेस टिप्स','feature6-desc':'आपके मूड, तनाव स्तर और इतिहास के आधार पर वैयक्तिकृत सुझाव',
+  },
+  mr: {
+    dashboard:'डॅशबोर्ड', checkin:'चेक-इन', suggestions:'AI सूचना',
+    chatbot:'AI चॅटबॉट', peer:'सहकारी जोड', notifications:'सूचना',
+    settings:'सेटिंग्ज', admin:'अॅडमिन पॅनल', main:'मुख्य', account:'खाते',
+    'feature1-title':'दैनिक मूड चेक-इन','feature1-desc':'इमोजी ट्रॅकिंग आणि स्ट्रेस स्लायडरद्वारे दररोज भावना नोंदवा',
+    'feature2-title':'AI चॅटबॉट सहाय्य','feature2-desc':'ताण निवारण आणि प्रोत्साहनासाठी 24/7 सहानुभूतिपूर्ण AI संभाषण',
+    'feature3-title':'सहकारी जोड','feature3-desc':'समान भावना असलेल्या सहकार्यांशी अनामिकपणे जोडा',
+    'feature4-title':'भावना विश्लेषण','feature4-desc':'आपल्या भावनिक नमुन्यांचा मागोवा घेण्यासाठी साप्ताहिक आणि मासिक चार्ट',
+    'feature5-title':'गोपनीयता प्रथम','feature5-desc':'आपला डेटा एनक्रिप्टेड आहे आणि कधीही सामायिक केला जात नाही',
+    'feature6-title':'AI वेलनेस टिप्स','feature6-desc':'आपल्या मूड, ताण पातळी आणि इतिहासावर आधारित वैयक्तिक सूचना',
+  },
+  kn: {
+    dashboard:'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್', checkin:'ಚೆಕ್-ಇನ್', suggestions:'AI ಸಲಹೆಗಳು',
+    chatbot:'AI ಚಾಟ್‌ಬಾಟ್', peer:'ಗೆಳೆಯ ಸಂಪರ್ಕ', notifications:'ಅಧಿಸೂಚನೆಗಳು',
+    settings:'ಸೆಟ್ಟಿಂಗ್‌ಗಳು', admin:'ಅಡ್ಮಿನ್ ಪ್ಯಾನಲ್', main:'ಮುಖ್ಯ', account:'ಖಾತೆ',
+    'feature1-title':'ದೈನಿಕ ಮೂಡ್ ಚೆಕ್-ಇನ್','feature1-desc':'ಇಮೋಜಿ ಟ್ರ್ಯಾಕಿಂಗ್ ಮತ್ತು ಒತ್ತಡ ಸ್ಲೈಡರ್‌ನೊಂದಿಗೆ ಪ್ರತಿದಿನ ಭಾವನೆಗಳನ್ನು ದಾಖಲಿಸಿ',
+    'feature2-title':'AI ಚಾಟ್‌ಬಾಟ್ ಬೆಂಬಲ','feature2-desc':'ಒತ್ತಡ ಮತ್ತು ಪ್ರೋತ್ಸಾಹಕ್ಕಾಗಿ 24/7 AI ಸಂಭಾಷಣೆ',
+    'feature3-title':'ಗೆಳೆಯ ಸಂಪರ್ಕ','feature3-desc':'ಇದೇ ಭಾವನೆ ಹೊಂದಿರುವ ಗೆಳೆಯರೊಂದಿಗೆ ಅನಾಮಧೇಯವಾಗಿ ಸಂಪರ್ಕಿಸಿ',
+    'feature4-title':'ಭಾವನೆ ವಿಶ್ಲೇಷಣೆ','feature4-desc':'ನಿಮ್ಮ ಭಾವನಾತ್ಮಕ ಮಾದರಿಗಳನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಲು ಸಾಪ್ತಾಹಿಕ ಮತ್ತು ಮಾಸಿಕ ಚಾರ್ಟ್‌ಗಳು',
+    'feature5-title':'ಗೌಪ್ಯತೆ ಮೊದಲು','feature5-desc':'ನಿಮ್ಮ ಡೇಟಾ ಎನ್‌ಕ್ರಿಪ್ಟ್ ಆಗಿದ್ದು ಎಂದಿಗೂ ಹಂಚಿಕೊಳ್ಳಲ್ಪಡುವುದಿಲ್ಲ',
+    'feature6-title':'AI ಆರೋಗ್ಯ ಸಲಹೆಗಳು','feature6-desc':'ನಿಮ್ಮ ಮೂಡ್, ಒತ್ತಡ ಮಟ್ಟ ಮತ್ತು ಇತಿಹಾಸದ ಆಧಾರದ ಮೇಲೆ ವೈಯಕ್ತಿಕ ಸಲಹೆಗಳು',
+  },
+  ta: {
+    dashboard:'டாஷ்போர்டு', checkin:'செக்-இன்', suggestions:'AI பரிந்துரைகள்',
+    chatbot:'AI சாட்போட்', peer:'சக இணைப்பு', notifications:'அறிவிப்புகள்',
+    settings:'அமைப்புகள்', admin:'நிர்வாக பலகை', main:'முகப்பு', account:'கணக்கு',
+    'feature1-title':'தினசரி மனநிலை சரிபார்ப்பு','feature1-desc':'இமோஜி கண்காணிப்பு மற்றும் மன அழுத்த ஸ்லைடர் மூலம் உணர்வுகளை பதிவு செய்யுங்கள்',
+    'feature2-title':'AI சாட்போட் ஆதரவு','feature2-desc':'மன அழுத்த நிவாரணத்திற்கு 24/7 AI உரையாடல்',
+    'feature3-title':'சக இணைப்பு','feature3-desc':'ஒரே உணர்வுகள் கொண்ட சகாக்களுடன் அநாமதேயமாக இணைக்கவும்',
+    'feature4-title':'உணர்வு பகுப்பாய்வு','feature4-desc':'உணர்வு வடிவங்களை கண்காணிக்க வாராந்திர மற்றும் மாதாந்திர விளக்கப்படங்கள்',
+    'feature5-title':'தனியுரிமை முதல்','feature5-desc':'உங்கள் தரவு குறியாக்கம் செய்யப்பட்டுள்ளது மற்றும் பகிரப்படவில்லை',
+    'feature6-title':'AI ஆரோக்கிய குறிப்புகள்','feature6-desc':'உங்கள் மனநிலை மற்றும் வரலாறு அடிப்படையிலான தனிப்பயனாக்கப்பட்ட பரிந்துரைகள்',
+  },
+  te: {
+    dashboard:'డాష్‌బోర్డ్', checkin:'చెక్-ఇన్', suggestions:'AI సూచనలు',
+    chatbot:'AI చాట్‌బాట్', peer:'సహచర సంపర్కం', notifications:'నోటిఫికేషన్లు',
+    settings:'సెట్టింగ్‌లు', admin:'అడ్మిన్ పానెల్', main:'ప్రధాన', account:'ఖాతా',
+    'feature1-title':'రోజువారీ మూడ్ చెక్-ఇన్','feature1-desc':'ఇమోజీ ట్రాకింగ్ మరియు స్ట్రెస్ స్లయిడర్‌తో రోజూ మీ భావాలను నమోదు చేయండి',
+    'feature2-title':'AI చాట్‌బాట్ మద్దతు','feature2-desc':'ఒత్తిడి నివారణ కోసం 24/7 AI సంభాషణలు',
+    'feature3-title':'సహచర సంపర్కం','feature3-desc':'ఇదే భావాలు ఉన్న సహాధ్యాయులతో అనామకంగా కనెక్ట్ అవ్వండి',
+    'feature4-title':'భావన విశ్లేషణ','feature4-desc':'మీ భావోద్వేగ నమూనాలను ట్రాక్ చేయడానికి వారాంతపు మరియు మాసిక చార్ట్‌లు',
+    'feature5-title':'గోప్యత మొదట','feature5-desc':'మీ డేటా ఎన్‌క్రిప్ట్ చేయబడి ఎప్పుడూ పంచుకోబడదు',
+    'feature6-title':'AI వెల్నెస్ చిట్కాలు','feature6-desc':'మీ మూడ్, ఒత్తిడి స్థాయి మరియు చరిత్ర ఆధారంగా వ్యక్తిగతీకరించిన సూచనలు',
+  }
+};
+
+function changeLanguage(lang) {
+  currentLang = lang;
+  document.getElementById('langSelect').value = lang;
+  const t = langs[lang];
+  document.querySelectorAll('[data-lang]').forEach(el => {
+    const key = el.getAttribute('data-lang');
+    if (t[key]) el.textContent = t[key];
+  });
+}
+
+// ========== THEME ==========
+function toggleTheme() {
+  isDark = !isDark;
+  document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  document.querySelector('.theme-btn').textContent = isDark ? '🌙' : '☀️';
+  const dt = document.getElementById('darkToggle');
+  if (dt) dt.checked = isDark;
+}
+
+// ========== NAVIGATION ==========
+function showPage(page, btn) {
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+  // Show target page
+  const el = document.getElementById('page-' + page);
+  if (el) el.classList.add('active');
+  if (btn) btn.classList.add('active');
+  currentPage = page;
+  // Show/hide sidebar and nav
+  const isPublic = (page === 'home' || page === 'login');
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('mainContent');
+  const mainNav = document.getElementById('mainNav');
+  if (isPublic) {
+    sidebar.classList.add('hidden');
+    main.classList.add('full');
+    mainNav.style.display = 'flex';
+  } else {
+    sidebar.classList.remove('hidden');
+    main.classList.remove('full');
+    mainNav.style.display = 'none';
+    // Mark active sidebar btn
+    const activeBtn = document.querySelector(`[data-page="${page}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+  }
+  // Init charts if needed
+  if (page === 'dashboard') setTimeout(initDashboardCharts, 100);
+  if (page === 'admin') setTimeout(initAdminCharts, 100);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ========== AUTH ==========
+function switchAuthTab(tab, btn) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('auth-' + tab).classList.add('active');
+}
+
+function selectRole(role, btn) {
+  btn.parentNode.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function doLogin() {
+  showPage('dashboard');
+}
+
+// ========== MOOD CHIPS ==========
+function selectMoodChip(el, mood) {
+  document.querySelectorAll('.mood-chip').forEach(c => {
+    c.classList.remove('selected');
+  });
+  el.classList.add('selected');
+  selectedMood = mood;
+}
+
+// ========== CHECK-IN ==========
+function selectEmoji(el, emoji, label) {
+  document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedEmoji = { emoji, label };
+}
+
+function nextStep(step) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('checkin-step' + i);
+    if (el) el.style.display = 'none';
+  }
+  const s = document.getElementById('checkin-step' + step);
+  if (s) s.style.display = 'block';
+  // Update step dots
+  for (let i = 1; i <= 4; i++) {
+    const dot = document.getElementById('step' + i);
+    if (!dot) continue;
+    if (i < step) { dot.classList.remove('current'); dot.classList.add('done'); }
+    else if (i === step) { dot.classList.add('current'); dot.classList.remove('done'); }
+    else { dot.classList.remove('current','done'); }
+  }
+}
+
+function updateStress(val) {
+  const labels = ['','😌 Very Calm','🙂 Relaxed','😐 Moderate','😟 Stressed','😰 Very Stressed'];
+  document.getElementById('stressVal').textContent = val + ' — ' + labels[val];
+  const dots = document.querySelectorAll('.stress-dot');
+  dots.forEach((d, i) => {
+    d.className = 'stress-dot';
+    if (i < val) d.classList.add('active-' + (i + 1));
+  });
+}
+
+// ========== CHATBOT ==========
+const botResponses = {
+  stressed: {
+    en: ["I hear you — exam stress is really tough. 💙 Let's try a quick breathing exercise: breathe in for 4 counts, hold for 4, breathe out for 4. Repeat 3 times. How does that feel?", "Exam pressure is real, but you've handled hard things before. 💪 Have you tried the Pomodoro technique? 25 mins study, 5 min break — it really helps!", "Remember: one task at a time. What's the most important thing you need to focus on right now?"],
+    hi: ["मैं समझता हूं — परीक्षा का तनाव सच में कठिन है। 💙 चलिए एक श्वास व्यायाम करते हैं: 4 तक सांस लें, 4 तक रोकें, 4 तक छोड़ें।", "परीक्षा का दबाव असली है, लेकिन आपने पहले भी मुश्किल चीजें संभाली हैं। 💪"],
+    mr: ["मी समजतो — परीक्षेचा ताण खरोखर कठीण आहे। 💙 श्वासोच्छवास व्यायाम करू: 4 वेळा श्वास घ्या, 4 वेळा थांबा, 4 वेळा सोडा।"],
+    kn: ["ನಾನು ಅರ್ಥಮಾಡಿಕೊಳ್ಳುತ್ತೇನೆ — ಪರೀಕ್ಷೆಯ ಒತ್ತಡ ನಿಜವಾಗಿಯೂ ಕಷ್ಟ. 💙 ಉಸಿರಾಟ ವ್ಯಾಯಾಮ ಮಾಡೋಣ।"],
+    ta: ["நான் புரிகிறேன் — தேர்வு அழுத்தம் மிகவும் கடினம். 💙 சுவாச பயிற்சி செய்வோம்।"],
+    te: ["నాకు అర్థమవుతుంది — పరీక్ష ఒత్తిడి నిజంగా కష్టంగా ఉంటుంది. 💙 శ్వాస వ్యాయామం చేద్దాం."]
+  },
+  lonely: {
+    en: ["Feeling lonely is more common than you think — you're definitely not alone in this. 🤗 Have you considered joining a campus club or reaching out to a classmate today?", "Loneliness often comes in waves. It's okay to feel this way. 💙 What's one small thing that could make today feel a little less empty?"],
+    hi: ["अकेलापन आपको लगता है कि आप अकेले हैं, लेकिन आप नहीं हैं। 🤗 क्या आपने किसी सहपाठी से बात करने की कोशिश की?"],
+    mr: ["एकटेपणा येतो, पण तुम्ही एकटे नाही. 🤗 एखाद्या मित्राशी बोलण्याचा प्रयत्न करा."],
+    kn: ["ಒಂಟಿ ಅನುಭವ ಸಾಮಾನ್ಯ — ನೀವು ಒಂಟಿಯಾಗಿಲ್ಲ. 🤗"],
+    ta: ["தனிமை உணர்வு பொதுவானது — நீங்கள் தனிமையில் இல்லை. 🤗"],
+    te: ["ఒంటరిగా అనిపించడం సాధారణమే — మీరు ఒంటరిగా లేరు. 🤗"]
+  },
+  breathing: {
+    en: ["Great choice! 🧘 Here's the 4-7-8 breathing technique:\n\n1. Breathe IN for 4 seconds\n2. HOLD for 7 seconds\n3. Breathe OUT for 8 seconds\n\nRepeat 3 times. Close your eyes and try it now!"],
+    hi: ["4-7-8 श्वास तकनीक: 4 सेकंड सांस लें, 7 सेकंड रोकें, 8 सेकंड छोड़ें। 3 बार दोहराएं। 🧘"],
+    mr: ["4-7-8 श्वासोच्छवास: 4 सेकंद घ्या, 7 ठेवा, 8 सोडा. 3 वेळा करा. 🧘"],
+    kn: ["4-7-8 ಉಸಿರಾಟ: 4 ಸೆಕೆಂಡ್ ಒಳಗೆ, 7 ತಡೆ, 8 ಹೊರಗೆ. 3 ಬಾರಿ ಮಾಡಿ. 🧘"],
+    ta: ["4-7-8 சுவாசம்: 4 நொடி உள்ளே, 7 நொடி நிறுத்து, 8 நொடி வெளியே. 3 முறை செய்யுங்கள். 🧘"],
+    te: ["4-7-8 శ్వాస: 4 సెకండ్లు లోపలికి, 7 పట్టుకోండి, 8 సెకండ్లు బయటికి. 3 సార్లు చేయండి. 🧘"]
+  },
+  motivation: {
+    en: ["You've got this! 💪 Remember: every expert was once a beginner. Progress, not perfection, is the goal. What's one small win you can celebrate today?", "Motivation comes and goes — but DISCIPLINE carries you through. Set a tiny goal for the next 25 minutes. Just 25 minutes! ⏱️"],
+    hi: ["आप यह कर सकते हैं! 💪 हर विशेषज्ञ एक बार शुरुआती था। प्रगति, परफेक्शन नहीं।"],
+    mr: ["तुम्ही हे करू शकता! 💪 लक्षात ठेवा - प्रत्येक तज्ञ एकेकाळी नवशिकया होता."],
+    kn: ["ನೀವು ಇದನ್ನು ಮಾಡಬಲ್ಲಿರಿ! 💪 ಪ್ರಗತಿ, ಪರಿಪೂರ್ಣತೆ ಅಲ್ಲ, ಗುರಿ."],
+    ta: ["நீங்கள் இதை செய்யலாம்! 💪 முன்னேற்றம், முழுமை அல்ல, இலக்கு."],
+    te: ["మీరు దీన్ని చేయగలరు! 💪 పురోగతి, పరిపూర్ణత కాదు, లక్ష్యం."]
+  },
+  break: {
+    en: ["Study break ideas! ☕ Choose one:\n\n🚶 5-min walk outside\n🎵 Listen to one song you love\n🍎 Grab a healthy snack\n🤸 Quick 10-rep stretches\n💧 Drink a glass of water\n\nYou'll come back refreshed and 35% more productive!"],
+    hi: ["ब्रेक के विचार! ☕ 5 मिनट बाहर चलना, एक गाना सुनना, पानी पीना।"],
+    mr: ["ब्रेकच्या कल्पना! ☕ 5 मिनिटे बाहेर चालणे, एक गाणे ऐकणे, पाणी पिणे."],
+    kn: ["ಬ್ರೇಕ್ ಸಲಹೆಗಳು! ☕ 5 ನಿಮಿಷ ಹೊರಗೆ ನಡೆಯಿರಿ, ಒಂದು ಹಾಡು ಕೇಳಿ, ನೀರು ಕುಡಿಯಿರಿ."],
+    ta: ["ஓய்வு யோசனைகள்! ☕ 5 நிமிட நடை, ஒரு பாடல் கேளுங்கள், தண்ணீர் குடியுங்கள்."],
+    te: ["బ్రేక్ ఆలోచనలు! ☕ 5 నిమిషాలు బయట నడవండి, ఒక పాట వినండి, నీరు త్రాగండి."]
+  },
+  default: {
+    en: ["Thank you for sharing. 💙 I'm here to listen. Can you tell me more about what's on your mind?", "That sounds challenging. You're brave for talking about it. 🌟 What kind of support would help you most right now?", "I hear you. Every feeling is valid. Let's work through this together — you're not alone. 💪"],
+    hi: ["बताने के लिए धन्यवाद। 💙 मैं यहां सुनने के लिए हूं। आप क्या सोच रहे हैं?"],
+    mr: ["सांगितल्याबद्दल धन्यवाद। 💙 मी येथे ऐकायला आहे."],
+    kn: ["ಹಂಚಿಕೊಂಡಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದ. 💙 ನಾನು ಕೇಳಲು ಇಲ್ಲಿದ್ದೇನೆ."],
+    ta: ["பகிர்ந்ததற்கு நன்றி. 💙 நான் கேட்க இங்கே இருக்கிறேன்."],
+    te: ["పంచుకున్నందుకు ధన్యవాదాలు. 💙 నేను వినడానికి ఇక్కడ ఉన్నాను."]
+  }
+};
+
+const distressKeywords = ['suicide','die','harm myself','hurt myself','end it all','give up on life','kill','hopeless'];
+
+function getBotResponse(msg) {
+  const lc = msg.toLowerCase();
+  // Check distress
+  if (distressKeywords.some(k => lc.includes(k))) {
+    return { text: "🚨 I'm genuinely concerned about you. Please know you're not alone. Please reach out immediately:\n\n📞 iCall: 9152987821\n📞 NIMHANS: 080-46110007\n📞 Vandrevala Foundation: 1860-2662-345\n\nYour counselor has been notified. Please reach out to them. 💙", crisis: true };
+  }
+  let category = 'default';
+  if (lc.includes('stress') || lc.includes('exam') || lc.includes('study')) category = 'stressed';
+  else if (lc.includes('lone') || lc.includes('alone') || lc.includes('friend')) category = 'lonely';
+  else if (lc.includes('breath')) category = 'breathing';
+  else if (lc.includes('motiv') || lc.includes('tired') || lc.includes('give up')) category = 'motivation';
+  else if (lc.includes('break') || lc.includes('rest') || lc.includes('relax')) category = 'break';
+  const responses = botResponses[category][currentLang] || botResponses[category]['en'];
+  return { text: responses[Math.floor(Math.random() * responses.length)] };
+}
+
+function addMessage(container, text, type, crisis = false) {
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + type;
+  div.style.whiteSpace = 'pre-wrap';
+  if (crisis) div.style.borderLeft = '3px solid var(--warn)';
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  const container = document.getElementById('chatMessages');
+  addMessage(container, msg, 'user');
+  // Typing indicator
+  const typing = document.createElement('div');
+  typing.className = 'chat-msg bot';
+  typing.textContent = '...';
+  typing.id = 'typing';
+  container.appendChild(typing);
+  container.scrollTop = container.scrollHeight;
+  setTimeout(() => {
+    typing.remove();
+    const response = getBotResponse(msg);
+    addMessage(container, response.text, 'bot', response.crisis);
+  }, 800 + Math.random() * 600);
+}
+
+function sendQuick(msg) {
+  document.getElementById('chatInput').value = msg;
+  sendChat();
+}
+
+// ========== PEER CONNECT ==========
+const peerMessages = [
+  "Hey, I understand that feeling. It's been tough for me lately too.",
+  "You're not alone in this. I was feeling the same way yesterday.",
+  "Thanks for talking. It helps to know others feel this way too.",
+  "Have you tried taking short breaks? It helped me a lot.",
+  "Sometimes just writing it down helps. Have you tried journaling?",
+  "That makes sense. Exam season is rough for everyone.",
+  "It gets better, I promise. One day at a time. 💙",
+  "I'm really glad we connected today.",
+];
+
+function startPeerSearch() {
+  document.getElementById('peer-lobby').style.display = 'none';
+  document.getElementById('peer-searching').style.display = 'block';
+  peerSearchTimeout = setTimeout(() => {
+    document.getElementById('peer-searching').style.display = 'none';
+    document.getElementById('peer-chat').style.display = 'block';
+    peerState = 'chat';
+  }, 3000);
+}
+
+function cancelSearch() {
+  clearTimeout(peerSearchTimeout);
+  document.getElementById('peer-searching').style.display = 'none';
+  document.getElementById('peer-lobby').style.display = 'block';
+  peerState = 'lobby';
+}
+
+function sendPeerMsg() {
+  const input = document.getElementById('peerInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  const container = document.getElementById('peerMessages');
+  // Filter harmful words (basic)
+  const harmfulWords = ['kill','die','suicide','stupid','idiot'];
+  const filtered = harmfulWords.reduce((m, w) => m.replace(new RegExp(w,'gi'), '***'), msg);
+  if (filtered !== msg) {
+    const warn = document.createElement('div');
+    warn.style = 'font-size:.75rem;color:var(--warn);text-align:center;padding:4px;';
+    warn.textContent = '⚠️ Message filtered for safety. Please be kind and supportive.';
+    container.appendChild(warn);
+    container.scrollTop = container.scrollHeight;
+    return;
+  }
+  addMessage(container, msg, 'user');
+  setTimeout(() => {
+    const reply = peerMessages[Math.floor(Math.random() * peerMessages.length)];
+    addMessage(container, reply, 'bot');
+  }, 1200 + Math.random() * 800);
+}
+
+function endPeerChat() {
+  if (confirm('Are you sure you want to end this chat? All messages will be cleared.')) {
+    document.getElementById('peer-chat').style.display = 'none';
+    document.getElementById('peer-lobby').style.display = 'block';
+    peerState = 'lobby';
+    // Clear messages
+    const container = document.getElementById('peerMessages');
+    container.innerHTML = '<div class="chat-msg bot">👋 Hi! We\'re both going through similar feelings. You\'re not alone. Feel free to share — I\'m here to listen.</div>';
+  }
+}
+
+// ========== CHARTS ==========
+let dashCharts = {};
+let adminCharts = {};
+
+function initDashboardCharts() {
+  if (dashCharts.weekly) { dashCharts.weekly.destroy(); }
+  if (dashCharts.monthly) { dashCharts.monthly.destroy(); }
+  const isDark = document.body.getAttribute('data-theme') === 'dark';
+  const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+  const textColor = isDark ? '#8b949e' : '#656d76';
+  Chart.defaults.color = textColor;
+  
+  // Weekly
+  const wctx = document.getElementById('weeklyChart');
+  if (!wctx) return;
+  dashCharts.weekly = new Chart(wctx, {
+    type: 'line',
+    data: {
+      labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      datasets: [{
+        label: 'Mood Score',
+        data: [3,4,3,5,4,5,4],
+        borderColor: '#58a6ff', backgroundColor: 'rgba(88,166,255,0.1)',
+        tension: 0.4, fill: true, pointBackgroundColor: '#58a6ff', pointRadius: 5
+      },{
+        label: 'Stress Level',
+        data: [3,2,3,1,2,1,2],
+        borderColor: '#bc8cff', backgroundColor: 'rgba(188,140,255,0.05)',
+        tension: 0.4, fill: false, pointBackgroundColor: '#bc8cff', pointRadius: 5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: true } },
+      scales: {
+        x: { grid: { color: gridColor } },
+        y: { grid: { color: gridColor }, min: 0, max: 6, ticks: { stepSize: 1 } }
+      }
+    }
+  });
+  
+  // Monthly
+  const mctx = document.getElementById('monthlyChart');
+  dashCharts.monthly = new Chart(mctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['😄 Happy','😐 Neutral','😰 Stressed','😟 Anxious','😔 Lonely'],
+      datasets: [{ data: [45,25,15,10,5], backgroundColor: ['#56d364','#58a6ff','#e3b341','#bc8cff','#f85149'], borderWidth: 2, borderColor: isDark ? '#161b22' : '#fff' }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { font: { size: 11 }, padding: 8 } } }
+    }
+  });
+}
+
+function initAdminCharts() {
+  if (adminCharts.chatbot) adminCharts.chatbot.destroy();
+  const isDark = document.body.getAttribute('data-theme') === 'dark';
+  const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+  
+  const ctx = document.getElementById('chatbotChart');
+  if (!ctx) return;
+  adminCharts.chatbot = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Week 1','Week 2','Week 3','Week 4'],
+      datasets: [{
+        label: 'Chatbot Sessions',
+        data: [280, 340, 290, 330],
+        backgroundColor: 'rgba(88,166,255,0.6)',
+        borderColor: '#58a6ff', borderWidth: 1, borderRadius: 6
+      },{
+        label: 'Peer Connects',
+        data: [40, 65, 55, 80],
+        backgroundColor: 'rgba(86,211,100,0.6)',
+        borderColor: '#56d364', borderWidth: 1, borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: true } },
+      scales: {
+        x: { grid: { color: gridColor } },
+        y: { grid: { color: gridColor }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ========== INIT ==========
+window.addEventListener('load', () => {
+  showPage('home');
+});
+</script>
+</body>
+</html>
