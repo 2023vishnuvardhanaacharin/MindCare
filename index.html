@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MindBridge — AI Student Wellness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --bg: #0b0f1a;
+  --surface: #131929;
+  --surface2: #1a2236;
+  --border: #ffffff12;
+  --accent: #6ee7b7;
+  --accent2: #818cf8;
+  --accent3: #fb7185;
+  --accent4: #fbbf24;
+  --text: #e2e8f0;
+  --text-muted: #64748b;
+  --text-dim: #94a3b8;
+  --glow: 0 0 40px #6ee7b722;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:#334155;border-radius:4px}
+
+/* TYPOGRAPHY */
+h1,h2,h3,h4{font-family:var(--font-head);line-height:1.2}
+
+/* LAYOUT */
+.app{display:flex;min-height:100vh}
+.sidebar{width:260px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;transition:.3s}
+.main-content{margin-left:260px;flex:1;min-height:100vh;display:flex;flex-direction:column}
+
+/* SIDEBAR */
+.sidebar-logo{padding:28px 24px 20px;border-bottom:1px solid var(--border)}
+.logo-mark{display:flex;align-items:center;gap:10px}
+.logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.logo-text{font-family:var(--font-head);font-weight:800;font-size:18px;color:var(--text)}
+.logo-sub{font-size:10px;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;margin-top:1px}
+
+.sidebar-nav{padding:16px 0;flex:1;overflow-y:auto}
+.nav-section{margin-bottom:8px}
+.nav-label{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;padding:8px 24px 4px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 24px;cursor:pointer;color:var(--text-dim);font-size:14px;font-weight:400;transition:.2s;border-left:3px solid transparent;position:relative}
+.nav-item:hover{background:#ffffff06;color:var(--text)}
+.nav-item.active{background:linear-gradient(90deg,#6ee7b714,transparent);color:var(--accent);border-left-color:var(--accent);font-weight:500}
+.nav-item .nav-icon{font-size:17px;width:22px;text-align:center}
+.nav-badge{margin-left:auto;background:var(--accent3);color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px}
+
+.sidebar-bottom{padding:16px 24px;border-top:1px solid var(--border)}
+.user-card{display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px;border-radius:var(--radius-sm);transition:.2s}
+.user-card:hover{background:#ffffff08}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;font-family:var(--font-head)}
+.user-info .name{font-size:13px;font-weight:500;color:var(--text)}
+.user-info .role{font-size:11px;color:var(--text-muted)}
+.user-logout{margin-left:auto;font-size:16px;opacity:.5;transition:.2s}
+.user-card:hover .user-logout{opacity:1}
+
+/* HEADER */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.header-left h2{font-size:18px;font-weight:700}
+.header-left p{font-size:12px;color:var(--text-muted);margin-top:1px}
+.header-right{display:flex;align-items:center;gap:12px}
+
+.lang-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:var(--radius-sm);font-family:var(--font-body);font-size:13px;cursor:pointer;outline:none}
+.lang-select:focus{border-color:var(--accent)}
+
+.notif-btn{width:36px;height:36px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;position:relative;transition:.2s}
+.notif-btn:hover{border-color:var(--accent);background:#6ee7b711}
+.notif-dot{position:absolute;top:6px;right:7px;width:7px;height:7px;background:var(--accent3);border-radius:50%;border:2px solid var(--surface)}
+
+/* PAGE CONTENT */
+.page-body{padding:28px;flex:1}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;transition:.2s}
+.card:hover{border-color:#ffffff20}
+.card-sm{padding:18px}
+
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+
+/* STAT CARDS */
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--c)}
+.stat-icon{font-size:26px}
+.stat-val{font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--text)}
+.stat-label{font-size:12px;color:var(--text-muted);letter-spacing:.03em}
+.stat-change{font-size:12px;font-weight:500}
+.stat-change.up{color:var(--accent)}
+.stat-change.down{color:var(--accent3)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--radius-sm);font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;border:none;transition:.2s;text-decoration:none}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#34d399);color:#0b1f16;font-weight:600}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px #6ee7b730}
+.btn-secondary{background:var(--surface2);border:1px solid var(--border);color:var(--text)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:#fb71851a;border:1px solid #fb718540;color:var(--accent3)}
+.btn-danger:hover{background:#fb718530}
+.btn-sm{padding:7px 14px;font-size:13px}
+.btn-lg{padding:13px 28px;font-size:15px;border-radius:12px}
+
+/* TAGS / BADGES */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.badge-green{background:#6ee7b720;color:var(--accent)}
+.badge-blue{background:#818cf820;color:var(--accent2)}
+.badge-red{background:#fb718520;color:var(--accent3)}
+.badge-yellow{background:#fbbf2420;color:var(--accent4)}
+
+/* FORMS */
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.form-label{font-size:12px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em}
+.form-control{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;transition:.2s;resize:none}
+.form-control:focus{border-color:var(--accent);background:var(--surface)}
+.form-control::placeholder{color:var(--text-muted)}
+
+/* MOOD EMOJIS */
+.mood-grid{display:flex;gap:12px;flex-wrap:wrap}
+.mood-btn{background:var(--surface2);border:2px solid var(--border);border-radius:14px;padding:16px 20px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:.25s;flex:1;min-width:70px}
+.mood-btn:hover{transform:translateY(-3px);border-color:#ffffff30}
+.mood-btn.selected{border-color:var(--accent);background:#6ee7b710;box-shadow:0 0 20px #6ee7b720}
+.mood-emoji{font-size:28px}
+.mood-label{font-size:11px;color:var(--text-dim);font-weight:500}
+
+/* SLIDER */
+.slider-wrap{position:relative;padding:8px 0}
+input[type=range]{width:100%;-webkit-appearance:none;height:6px;background:var(--surface2);border-radius:3px;outline:none;border:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:50%;cursor:pointer;box-shadow:0 0 10px #6ee7b740;transition:.2s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+.slider-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:6px}
+
+/* CHATBOT */
+.chat-wrap{display:flex;flex-direction:column;height:480px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
+.chat-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--surface)}
+.chat-avatar{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px}
+.chat-title{font-size:14px;font-weight:600}
+.chat-status{font-size:11px;color:var(--accent)}
+.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:78%;display:flex;flex-direction:column;gap:3px}
+.msg.bot{align-self:flex-start}
+.msg.user{align-self:flex-end}
+.msg-bubble{padding:10px 14px;border-radius:14px;font-size:13.5px;line-height:1.5}
+.msg.bot .msg-bubble{background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:4px}
+.msg.user .msg-bubble{background:linear-gradient(135deg,var(--accent2),#6366f1);color:#fff;border-bottom-right-radius:4px}
+.msg-time{font-size:10px;color:var(--text-muted);padding:0 4px}
+.msg.user .msg-time{text-align:right}
+.chat-input-area{padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--surface)}
+.chat-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:22px;padding:10px 16px;color:var(--text);font-family:var(--font-body);font-size:14px;outline:none}
+.chat-input:focus{border-color:var(--accent2)}
+.chat-send{width:40px;height:40px;background:linear-gradient(135deg,var(--accent2),#6366f1);border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:.2s}
+.chat-send:hover{transform:scale(1.08)}
+.disclaimer{background:#fbbf2412;border:1px solid #fbbf2430;border-radius:var(--radius-sm);padding:8px 14px;font-size:11px;color:var(--accent4);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+
+/* PEER CHAT */
+.peer-wrap{display:flex;flex-direction:column;height:460px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
+.peer-header{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between}
+.peer-badge{display:flex;align-items:center;gap:8px}
+.peer-avatar{width:34px;height:34px;background:linear-gradient(135deg,#fb7185,#f43f5e);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px}
+
+/* ALERTS */
+.alert-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;display:flex;align-items:flex-start;gap:14px;margin-bottom:10px;transition:.2s}
+.alert-item:hover{border-color:#ffffff20}
+.alert-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.alert-icon.high{background:#fb718520}
+.alert-icon.medium{background:#fbbf2420}
+.alert-icon.low{background:#6ee7b720}
+.alert-meta{flex:1}
+.alert-title{font-size:14px;font-weight:500;margin-bottom:3px}
+.alert-desc{font-size:12px;color:var(--text-muted)}
+.alert-time{font-size:11px;color:var(--text-muted);margin-left:auto;white-space:nowrap}
+
+/* HEATMAP */
+.heatmap{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.hm-cell{aspect-ratio:1;border-radius:4px;background:var(--surface2);cursor:pointer;transition:.2s;position:relative}
+.hm-cell:hover::after{content:attr(data-tip);position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:#1a2236;border:1px solid var(--border);color:var(--text);font-size:11px;padding:4px 8px;border-radius:6px;white-space:nowrap;z-index:10;pointer-events:none}
+.hm-cell.l1{background:#6ee7b730}
+.hm-cell.l2{background:#6ee7b760}
+.hm-cell.l3{background:#6ee7b7aa}
+.hm-cell.l4{background:#6ee7b7}
+.hm-cell.stressed{background:#fb718560}
+.hm-cell.anxious{background:#fbbf2460}
+
+/* CHARTS */
+.chart-wrap{position:relative;height:200px}
+
+/* SETTINGS */
+.settings-section{margin-bottom:28px}
+.settings-section h3{font-size:15px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)6}
+.toggle-info .toggle-name{font-size:14px;font-weight:400}
+.toggle-info .toggle-desc{font-size:12px;color:var(--text-muted);margin-top:2px}
+.toggle{position:relative;width:46px;height:26px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#1e293b;border-radius:13px;cursor:pointer;transition:.3s;border:1px solid var(--border)}
+.toggle-slider::before{content:'';position:absolute;width:20px;height:20px;left:2px;bottom:2px;background:#475569;border-radius:50%;transition:.3s}
+.toggle input:checked + .toggle-slider{background:linear-gradient(135deg,var(--accent),#34d399)}
+.toggle input:checked + .toggle-slider::before{transform:translateX(20px);background:#fff}
+
+/* LOGIN PAGE */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px;position:relative;overflow:hidden}
+.login-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,#6ee7b708,transparent 60%),radial-gradient(ellipse at 70% 70%,#818cf808,transparent 60%);pointer-events:none}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:40px;width:100%;max-width:440px;position:relative;z-index:1}
+.login-head{text-align:center;margin-bottom:28px}
+.login-icon{width:60px;height:60px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 16px}
+.login-head h1{font-size:24px;font-weight:800}
+.login-head p{font-size:14px;color:var(--text-muted);margin-top:4px}
+.tab-switch{display:flex;background:var(--surface2);border-radius:var(--radius-sm);padding:3px;margin-bottom:24px;gap:3px}
+.tab-btn{flex:1;padding:8px;text-align:center;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-muted);transition:.2s;border:none;background:none;font-family:var(--font-body)}
+.tab-btn.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px #00000040}
+.consent-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:18px}
+.consent-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);margin-top:2px;cursor:pointer;flex-shrink:0}
+.consent-row label{font-size:12px;color:var(--text-muted);cursor:pointer}
+.divider{text-align:center;font-size:12px;color:var(--text-muted);margin:16px 0;position:relative}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:var(--border)}
+.divider::before{left:0}
+.divider::after{right:0}
+.role-toggle{display:flex;gap:10px;margin-bottom:18px}
+.role-btn{flex:1;padding:10px;background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;text-align:center;font-size:13px;font-weight:500;color:var(--text-muted);transition:.2s;font-family:var(--font-body)}
+.role-btn.selected{border-color:var(--accent);color:var(--accent);background:#6ee7b710}
+
+/* HOME */
+.hero{background:linear-gradient(135deg,var(--surface),var(--surface2));border:1px solid var(--border);border-radius:24px;padding:40px;margin-bottom:24px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;right:-60px;top:-60px;width:300px;height:300px;background:radial-gradient(circle,#6ee7b712,transparent 70%);pointer-events:none}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;background:#6ee7b715;border:1px solid #6ee7b730;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}
+.hero h1{font-size:34px;font-weight:800;margin-bottom:10px;line-height:1.1}
+.hero p{color:var(--text-dim);font-size:15px;max-width:560px;margin-bottom:20px}
+
+/* SUGGESTION CARDS */
+.suggestion-card{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:18px;display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;transition:.2s}
+.suggestion-card:hover{border-color:#ffffff20;transform:translateY(-1px)}
+.suggestion-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.suggestion-text h4{font-size:14px;font-weight:600;margin-bottom:4px}
+.suggestion-text p{font-size:12px;color:var(--text-muted)}
+
+/* COUNSELOR DASHBOARD */
+.risk-bar{display:flex;gap:0;border-radius:8px;overflow:hidden;height:10px;margin:6px 0}
+.risk-seg{height:100%;transition:.5s}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{text-align:left;padding:10px 14px;color:var(--text-muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)}
+.data-table td{padding:12px 14px;border-bottom:1px solid var(--border)6;color:var(--text)}
+.data-table tr:hover td{background:#ffffff04}
+.data-table tr:last-child td{border-bottom:none}
+
+/* EMOTION DOTS */
+.emotion-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.dot-happy{background:#6ee7b7}
+.dot-neutral{background:#94a3b8}
+.dot-stressed{background:#fb7185}
+.dot-anxious{background:#fbbf24}
+.dot-lonely{background:#818cf8}
+
+/* PEER CONNECT */
+.connect-state{text-align:center;padding:40px 20px}
+.connect-state .big-emoji{font-size:60px;margin-bottom:16px}
+.connect-state h3{font-size:20px;font-weight:700;margin-bottom:8px}
+.connect-state p{font-size:13px;color:var(--text-muted);max-width:300px;margin:0 auto 20px}
+.matching-anim{display:flex;align-items:center;justify-content:center;gap:16px;margin:20px 0}
+.matching-dot{width:12px;height:12px;background:var(--accent);border-radius:50%;animation:pulse 1.2s infinite}
+.matching-dot:nth-child(2){animation-delay:.2s}
+.matching-dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+
+/* PAGE TRANSITIONS */
+.page{display:none}
+.page.active{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-260px)}
+  .sidebar.open{transform:translateX(0)}
+  .main-content{margin-left:0}
+  .grid-3,.grid-4{grid-template-columns:1fr 1fr}
+  .grid-2{grid-template-columns:1fr}
+  .hamburger{display:flex}
+}
+@media(max-width:600px){
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+  .hero h1{font-size:24px}
+  .page-body{padding:16px}
+  .hero{padding:24px}
+}
+
+/* HAMBURGER */
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px}
+.hamburger span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px;transition:.3s}
+
+/* OVERLAY */
+.overlay{display:none;position:fixed;inset:0;background:#00000060;z-index:90}
+.overlay.show{display:block}
+
+/* PROGRESS */
+.progress-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:.5s}
+
+/* INSIGHT PILL */
+.insight-pill{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--text-dim);margin:3px}
+
+/* LOADING */
+.loading-dots span{display:inline-block;width:7px;height:7px;background:var(--accent2);border-radius:50%;margin:0 2px;animation:ld .8s infinite alternate}
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+@keyframes ld{from{opacity:.3;transform:translateY(0)}to{opacity:1;transform:translateY(-5px)}}
+
+/* SCROLLABLE AREA */
+.scroll-area{overflow-y:auto;max-height:300px;padding-right:4px}
+
+/* WEEK ROW */
+.week-row{display:flex;gap:6px;margin-bottom:8px}
+.week-cell{flex:1;background:var(--surface2);border-radius:8px;padding:8px;text-align:center;font-size:11px;color:var(--text-muted)}
+.week-cell .day{font-size:10px;margin-bottom:4px}
+.week-cell .emoji-sm{font-size:18px}
+</style>
+</head>
+<body>
+
+<div id="loginPage" class="login-wrap">
+  <div class="login-bg"></div>
+  <div class="login-card">
+    <div class="login-head">
+      <div class="login-icon">🧠</div>
+      <h1>MindBridge</h1>
+      <p>AI-Powered Student Emotional Wellness</p>
+    </div>
+    <div class="role-toggle">
+      <button class="role-btn selected" onclick="selectRole('student',this)">🎓 Student</button>
+      <button class="role-btn" onclick="selectRole('counselor',this)">👤 Counselor</button>
+    </div>
+    <div class="tab-switch">
+      <button class="tab-btn active" onclick="switchTab('login',this)" id="loginTabBtn">Sign In</button>
+      <button class="tab-btn" onclick="switchTab('signup',this)" id="signupTabBtn">Sign Up</button>
+    </div>
+    <div id="loginForm">
+      <div class="form-group">
+        <label class="form-label" data-i18n="email">Email Address</label>
+        <input type="email" class="form-control" placeholder="student@college.edu" id="loginEmail"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="password">Password</label>
+        <input type="password" class="form-control" placeholder="••••••••" id="loginPass"/>
+      </div>
+      <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="doLogin()" data-i18n="signin">Sign In</button>
+      <div class="divider" style="margin-top:16px">or try demo</div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-secondary" style="flex:1;justify-content:center;font-size:12px" onclick="quickLogin('student')">🎓 Student Demo</button>
+        <button class="btn btn-secondary" style="flex:1;justify-content:center;font-size:12px" onclick="quickLogin('counselor')">👤 Counselor Demo</button>
+      </div>
+    </div>
+    <div id="signupForm" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-control" placeholder="Arjun Sharma" id="regName"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" placeholder="student@college.edu" id="regEmail"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-control" placeholder="Min 8 characters" id="regPass"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Department</label>
+        <select class="form-control" id="regDept">
+          <option>Computer Science</option><option>Mechanical Eng.</option><option>Civil Eng.</option><option>BBA/MBA</option><option>Arts & Humanities</option>
+        </select>
+      </div>
+      <div class="consent-row">
+        <input type="checkbox" id="consentBox"/>
+        <label for="consentBox">I consent to anonymous emotional data processing for wellness tracking. I understand this data helps improve mental health support. <a href="#" style="color:var(--accent)">Privacy Policy</a></label>
+      </div>
+      <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="doSignup()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<div id="appWrap" class="app" style="display:none">
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">🧠</div>
+        <div>
+          <div class="logo-text">MindBridge</div>
+          <div class="logo-sub">Wellness Platform</div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-nav" id="sidebarNav"></div>
+    <div class="sidebar-bottom">
+      <div class="user-card" onclick="navigate('settings')">
+        <div class="user-avatar" id="userAvatarSidebar">A</div>
+        <div class="user-info">
+          <div class="name" id="userNameSidebar">Arjun Sharma</div>
+          <div class="role" id="userRoleSidebar">Student</div>
+        </div>
+        <div class="user-logout" onclick="event.stopPropagation();doLogout()">⏏</div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <header class="header">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="hamburger" id="hamburger" onclick="toggleSidebar()">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="header-left">
+          <h2 id="pageTitle">Dashboard</h2>
+          <p id="pageDate"></p>
+        </div>
+      </div>
+      <div class="header-right">
+        <select class="lang-select" id="langSelect" onchange="setLang(this.value)">
+          <option value="en">🌐 English</option>
+          <option value="hi">हि Hindi</option>
+          <option value="mr">म Marathi</option>
+          <option value="kn">ಕ Kannada</option>
+          <option value="ta">த Tamil</option>
+          <option value="te">తె Telugu</option>
+          <option value="ml">മ Malayalam</option>
+        </select>
+        <div class="notif-btn" onclick="navigate('alerts')">
+          🔔<div class="notif-dot"></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <!-- HOME -->
+      <div class="page active" id="page-home">
+        <div class="hero">
+          <div class="hero-tag">✨ <span data-i18n="welcome_tag">AI-Powered Wellness</span></div>
+          <h1 data-i18n="hero_title">Your Mental Wellness,<br/>Our Priority</h1>
+          <p data-i18n="hero_desc">Track your emotions daily, get AI-powered insights, and connect with support — anonymously and safely.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-lg" onclick="navigate('checkin')" data-i18n="checkin_btn">🌟 Daily Check-In</button>
+            <button class="btn btn-secondary btn-lg" onclick="navigate('chatbot')">🤖 <span data-i18n="chat_btn">Talk to AI</span></button>
+          </div>
+        </div>
+        <div class="grid-4" style="margin-bottom:24px">
+          <div class="stat-card" style="--c:#6ee7b7">
+            <div class="stat-icon">😊</div>
+            <div class="stat-val">72%</div>
+            <div class="stat-label" data-i18n="stat1">Positive Days</div>
+            <div class="stat-change up">↑ 8% this week</div>
+          </div>
+          <div class="stat-card" style="--c:#818cf8">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-val">14</div>
+            <div class="stat-label" data-i18n="stat2">Day Streak</div>
+            <div class="stat-change up">↑ Keep going!</div>
+          </div>
+          <div class="stat-card" style="--c:#fbbf24">
+            <div class="stat-icon">📊</div>
+            <div class="stat-val">2.3</div>
+            <div class="stat-label" data-i18n="stat3">Avg Stress Level</div>
+            <div class="stat-change up">↓ Improving</div>
+          </div>
+          <div class="stat-card" style="--c:#fb7185">
+            <div class="stat-icon">💬</div>
+            <div class="stat-val">6</div>
+            <div class="stat-label" data-i18n="stat4">AI Sessions</div>
+            <div class="stat-change up">This month</div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:6px" data-i18n="this_week">This Week's Mood</h3>
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px" data-i18n="last7">Last 7 days overview</p>
+            <div class="week-row">
+              <div class="week-cell"><div class="day">Mon</div><div class="emoji-sm">😊</div></div>
+              <div class="week-cell"><div class="day">Tue</div><div class="emoji-sm">😔</div></div>
+              <div class="week-cell"><div class="day">Wed</div><div class="emoji-sm">😤</div></div>
+              <div class="week-cell"><div class="day">Thu</div><div class="emoji-sm">😊</div></div>
+              <div class="week-cell"><div class="day">Fri</div><div class="emoji-sm">😌</div></div>
+              <div class="week-cell"><div class="day">Sat</div><div class="emoji-sm">🥳</div></div>
+              <div class="week-cell"><div class="day">Sun</div><div class="emoji-sm">😊</div></div>
+            </div>
+            <div class="chart-wrap" style="height:160px"><canvas id="homeChart"></canvas></div>
+          </div>
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:4px" data-i18n="quick_actions">Quick Actions</h3>
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px" data-i18n="what_today">What do you need today?</p>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <button class="suggestion-card" onclick="navigate('checkin')" style="width:100%;text-align:left;cursor:pointer;border:none;background:none">
+                <div class="suggestion-icon" style="background:#6ee7b720">📝</div>
+                <div class="suggestion-text"><h4 data-i18n="qa1">Log Today's Mood</h4><p data-i18n="qa1d">Take your daily check-in</p></div>
+              </button>
+              <button class="suggestion-card" onclick="navigate('chatbot')" style="width:100%;text-align:left;cursor:pointer;border:none;background:none">
+                <div class="suggestion-icon" style="background:#818cf820">🤖</div>
+                <div class="suggestion-text"><h4 data-i18n="qa2">AI Support Chat</h4><p data-i18n="qa2d">Talk through how you're feeling</p></div>
+              </button>
+              <button class="suggestion-card" onclick="navigate('peer')" style="width:100%;text-align:left;cursor:pointer;border:none;background:none">
+                <div class="suggestion-icon" style="background:#fb718520">🤝</div>
+                <div class="suggestion-text"><h4 data-i18n="qa3">Talk to Someone</h4><p data-i18n="qa3d">Anonymous peer connection</p></div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHECK-IN -->
+      <div class="page" id="page-checkin">
+        <div class="card" style="max-width:680px;margin:0 auto">
+          <h2 style="margin-bottom:4px;font-size:22px" data-i18n="checkin_title">Daily Emotion Check-In</h2>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:24px" data-i18n="checkin_sub">Your responses are private and encrypted. Takes 2 minutes.</p>
+          
+          <div class="form-group">
+            <label class="form-label" data-i18n="how_feeling">How are you feeling today?</label>
+            <div class="mood-grid" id="moodGrid">
+              <div class="mood-btn" onclick="selectMood('happy',this)"><div class="mood-emoji">😊</div><div class="mood-label" data-i18n="mood_happy">Happy</div></div>
+              <div class="mood-btn" onclick="selectMood('neutral',this)"><div class="mood-emoji">😐</div><div class="mood-label" data-i18n="mood_neutral">Neutral</div></div>
+              <div class="mood-btn" onclick="selectMood('stressed',this)"><div class="mood-emoji">😤</div><div class="mood-label" data-i18n="mood_stressed">Stressed</div></div>
+              <div class="mood-btn" onclick="selectMood('anxious',this)"><div class="mood-emoji">😰</div><div class="mood-label" data-i18n="mood_anxious">Anxious</div></div>
+              <div class="mood-btn" onclick="selectMood('lonely',this)"><div class="mood-emoji">😔</div><div class="mood-label" data-i18n="mood_lonely">Lonely</div></div>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top:20px">
+            <label class="form-label" data-i18n="stress_level">Stress Level <span id="stressVal" style="color:var(--accent);font-size:14px;text-transform:none">— 3</span></label>
+            <div class="slider-wrap">
+              <input type="range" min="1" max="5" value="3" id="stressSlider" oninput="updateStress(this.value)"/>
+              <div class="slider-labels"><span>1 — Calm 😌</span><span>3 — Moderate</span><span>5 — Critical 🆘</span></div>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top:20px">
+            <label class="form-label" data-i18n="tell_more">Tell us more (optional)</label>
+            <textarea class="form-control" rows="3" id="moodText" data-i18n-ph="mood_placeholder" placeholder="I've been feeling overwhelmed with assignments lately..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" data-i18n="sleep_label">Sleep Quality Last Night</label>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-secondary btn-sm" id="sleep1" onclick="selectSleep(1,this)">😴 Poor</button>
+              <button class="btn btn-secondary btn-sm" id="sleep2" onclick="selectSleep(2,this)">🙂 Okay</button>
+              <button class="btn btn-secondary btn-sm" id="sleep3" onclick="selectSleep(3,this)">😊 Great</button>
+            </div>
+          </div>
+
+          <div id="checkinResult" style="display:none;margin-top:16px">
+            <div class="card card-sm" style="background:var(--surface2);border-color:#6ee7b730">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                <div style="font-size:24px">🤖</div>
+                <div><div style="font-size:13px;font-weight:600;color:var(--accent)" data-i18n="ai_insight">AI Insight</div><div style="font-size:11px;color:var(--text-muted)" data-i18n="ai_instant">Instant analysis</div></div>
+              </div>
+              <p id="aiInsightText" style="font-size:13px;color:var(--text-dim);line-height:1.6"></p>
+              <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap" id="insightTags"></div>
+            </div>
+          </div>
+
+          <div style="margin-top:20px;display:flex;gap:10px">
+            <button class="btn btn-primary" onclick="submitCheckin()" data-i18n="submit_checkin">✓ Submit Check-In</button>
+            <button class="btn btn-secondary" onclick="navigate('suggestions')" data-i18n="view_suggestions">View Suggestions →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI SUGGESTIONS -->
+      <div class="page" id="page-suggestions">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+          <div>
+            <h2 style="font-size:22px;margin-bottom:4px" data-i18n="suggestions_title">AI Wellness Suggestions</h2>
+            <p style="color:var(--text-muted);font-size:13px" data-i18n="suggestions_sub">Personalized for your emotional state today</p>
+          </div>
+          <div style="display:flex;gap:8px">
+            <span class="badge badge-yellow">😤 <span data-i18n="state_stressed">Stressed</span></span>
+            <span class="badge badge-red">Risk: <span data-i18n="risk_medium">Medium</span></span>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom:20px">
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:14px;display:flex;align-items:center;gap:8px">🧘 <span data-i18n="immediate_relief">Immediate Relief</span></h3>
+            <div class="suggestion-card"><div class="suggestion-icon" style="background:#6ee7b720">🌬️</div><div class="suggestion-text"><h4 data-i18n="s1">4-7-8 Breathing Exercise</h4><p data-i18n="s1d">Breathe in for 4s, hold 7s, out 8s. Repeat 3 times to activate your parasympathetic nervous system.</p></div></div>
+            <div class="suggestion-card"><div class="suggestion-icon" style="background:#818cf820">🎵</div><div class="suggestion-text"><h4 data-i18n="s2">Listen to Calm Music</h4><p data-i18n="s2d">15 minutes of slow, instrumental music can reduce cortisol levels by up to 66%.</p></div></div>
+            <div class="suggestion-card"><div class="suggestion-icon" style="background:#fbbf2420">☕</div><div class="suggestion-text"><h4 data-i18n="s3">Take a Study Break</h4><p data-i18n="s3d">You've been studying for a while. A 10-minute break now will boost your productivity.</p></div></div>
+          </div>
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:14px;display:flex;align-items:center;gap:8px">📅 <span data-i18n="weekly_plan">This Week's Plan</span></h3>
+            <div class="suggestion-card"><div class="suggestion-icon" style="background:#fb718520">🏃</div><div class="suggestion-text"><h4 data-i18n="s4">20-Min Walk Daily</h4><p data-i18n="s4d">Physical activity is proven to reduce anxiety. Even a short evening walk helps significantly.</p></div></div>
+            <div class="suggestion-card"><div class="suggestion-icon" style="background:#6ee7b720">😴</div><div class="suggestion-text"><h4 data-i18n="s5">Sleep by 11 PM</h4><p data-i18n="s5d">Your stress levels correlate with poor sleep this week. Aim for 7–8 hours consistently.</p></div></div>
+            <div class="suggestion-card"><div class="suggestion-icon" style="background:#818cf820">📓</div><div class="suggestion-text"><h4 data-i18n="s6">Journaling Practice</h4><p data-i18n="s6d">Write 3 things you're grateful for each morning. Scientifically shown to improve mood.</p></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:15px;margin-bottom:4px" data-i18n="monthly_chart">Monthly Emotion Chart</h3>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px" data-i18n="monthly_desc">Your emotional journey over 30 days</p>
+          <div class="chart-wrap" style="height:220px"><canvas id="monthlyChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- CHATBOT -->
+      <div class="page" id="page-chatbot">
+        <div style="max-width:680px;margin:0 auto">
+          <h2 style="font-size:22px;margin-bottom:4px" data-i18n="chatbot_title">AI Support Chatbot</h2>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px" data-i18n="chatbot_sub">Available 24/7. Completely confidential.</p>
+          <div class="disclaimer">⚠️ <span data-i18n="disclaimer">This chatbot is not a medical professional. For emergencies, contact your counselor or call 112.</span></div>
+          <div class="chat-wrap">
+            <div class="chat-header">
+              <div class="chat-avatar">🤖</div>
+              <div><div class="chat-title">MindBot</div><div class="chat-status">● Online</div></div>
+              <div style="margin-left:auto;display:flex;gap:8px">
+                <button class="btn btn-secondary btn-sm" onclick="clearChat()">🗑️</button>
+              </div>
+            </div>
+            <div class="chat-msgs" id="chatMessages">
+              <div class="msg bot"><div class="msg-bubble" data-i18n="bot_greet">Hi there! 👋 I'm MindBot, your 24/7 emotional wellness companion. How are you feeling right now?</div><div class="msg-time">Just now</div></div>
+            </div>
+            <div class="chat-input-area">
+              <input type="text" class="chat-input" id="chatInput" data-i18n-ph="chat_placeholder" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMessage()"/>
+              <button class="chat-send" onclick="sendMessage()">➤</button>
+            </div>
+          </div>
+          <div style="margin-top:12px">
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px" data-i18n="quick_prompts">Quick prompts:</p>
+            <div style="display:flex;flex-wrap:wrap;gap:6px" id="quickPrompts">
+              <button class="btn btn-secondary btn-sm" onclick="sendQuick(this.textContent)">😔 I feel anxious</button>
+              <button class="btn btn-secondary btn-sm" onclick="sendQuick(this.textContent)">😤 I'm stressed</button>
+              <button class="btn btn-secondary btn-sm" onclick="sendQuick(this.textContent)">💤 I can't sleep</button>
+              <button class="btn btn-secondary btn-sm" onclick="sendQuick(this.textContent)">📚 Exam pressure</button>
+              <button class="btn btn-secondary btn-sm" onclick="sendQuick(this.textContent)">🧘 Help me calm down</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PEER CONNECT -->
+      <div class="page" id="page-peer">
+        <div style="max-width:680px;margin:0 auto">
+          <h2 style="font-size:22px;margin-bottom:4px" data-i18n="peer_title">Talk to Someone Like You</h2>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px" data-i18n="peer_sub">Connect anonymously with a fellow student who understands</p>
+          <div class="disclaimer">🔒 <span data-i18n="peer_disclaimer">100% Anonymous. No names. No IDs. Conversations are not stored permanently. Do not share personal contact details.</span></div>
+          
+          <div id="peerLanding">
+            <div class="card" style="text-align:center;padding:40px;margin-bottom:16px">
+              <div style="font-size:50px;margin-bottom:16px">🤝</div>
+              <h3 style="font-size:20px;margin-bottom:8px" data-i18n="peer_heading">You're not alone</h3>
+              <p style="color:var(--text-muted);font-size:13px;margin-bottom:24px;max-width:360px;margin-left:auto;margin-right:auto" data-i18n="peer_desc">We'll match you with another student feeling similarly. This is a safe, judgment-free space.</p>
+              <div style="display:flex;flex-direction:column;gap:10px;max-width:300px;margin:0 auto">
+                <div class="form-group" style="text-align:left;margin-bottom:0">
+                  <label class="form-label" data-i18n="peer_mood_label">Your current mood</label>
+                  <select class="form-control" id="peerMood">
+                    <option value="lonely">😔 Feeling Lonely</option>
+                    <option value="stressed">😤 Stressed / Overwhelmed</option>
+                    <option value="anxious">😰 Anxious</option>
+                    <option value="sad">😢 Sad</option>
+                  </select>
+                </div>
+                <div class="consent-row" style="text-align:left">
+                  <input type="checkbox" id="peerConsent"/>
+                  <label for="peerConsent" data-i18n="peer_consent">I agree to community guidelines: be kind, no sharing personal info, end chat if uncomfortable.</label>
+                </div>
+                <button class="btn btn-primary" onclick="startMatching()" data-i18n="find_peer">🔍 Find a Peer</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="peerMatching" style="display:none">
+            <div class="card" style="text-align:center;padding:40px">
+              <div class="matching-anim"><div class="matching-dot"></div><div class="matching-dot"></div><div class="matching-dot"></div></div>
+              <h3 style="margin-top:16px" data-i18n="matching">Finding your match...</h3>
+              <p style="color:var(--text-muted);font-size:13px;margin-top:6px" data-i18n="matching_desc">Looking for a student with a similar emotional state</p>
+            </div>
+          </div>
+
+          <div id="peerChat" style="display:none">
+            <div class="peer-wrap">
+              <div class="peer-header">
+                <div class="peer-badge">
+                  <div class="peer-avatar">🎭</div>
+                  <div><div style="font-size:14px;font-weight:600" data-i18n="anon_peer">Anonymous Peer</div><div style="font-size:11px;color:var(--accent)">● Connected</div></div>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="endPeerChat()" data-i18n="end_chat">✕ End Chat</button>
+              </div>
+              <div class="chat-msgs" id="peerMessages">
+                <div style="text-align:center;font-size:11px;color:var(--text-muted);padding:8px;background:var(--surface2);margin:8px;border-radius:8px" data-i18n="peer_connected_msg">You are now connected with an anonymous peer. Be kind and supportive. 💚</div>
+              </div>
+              <div class="chat-input-area">
+                <input type="text" class="chat-input" id="peerInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendPeerMsg()"/>
+                <button class="chat-send" style="background:linear-gradient(135deg,#fb7185,#f43f5e)" onclick="sendPeerMsg()">➤</button>
+              </div>
+            </div>
+            <div style="margin-top:10px;background:#fb718510;border:1px solid #fb718530;border-radius:10px;padding:10px 14px;font-size:12px;color:var(--accent3)" id="peerSafetyMsg" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COUNSELOR DASHBOARD -->
+      <div class="page" id="page-counselor">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+          <div>
+            <h2 style="font-size:22px;margin-bottom:4px" data-i18n="counselor_title">Counselor Dashboard</h2>
+            <p style="color:var(--text-muted);font-size:13px" data-i18n="counselor_sub">Anonymized emotional analytics — April 2025</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="downloadCSV()">⬇ <span data-i18n="download_csv">Download CSV Report</span></button>
+        </div>
+        <div class="grid-4" style="margin-bottom:20px">
+          <div class="stat-card" style="--c:#6ee7b7"><div class="stat-icon">👥</div><div class="stat-val">284</div><div class="stat-label" data-i18n="total_students">Active Students</div></div>
+          <div class="stat-card" style="--c:#fb7185"><div class="stat-icon">🚨</div><div class="stat-val">8</div><div class="stat-label" data-i18n="high_risk">High-Risk Alerts</div><div class="stat-change down">↑ 3 new today</div></div>
+          <div class="stat-card" style="--c:#818cf8"><div class="stat-icon">🤖</div><div class="stat-val">1,240</div><div class="stat-label" data-i18n="chatbot_sessions">Chatbot Sessions</div><div class="stat-change up">This month</div></div>
+          <div class="stat-card" style="--c:#fbbf24"><div class="stat-icon">📋</div><div class="stat-val">91%</div><div class="stat-label" data-i18n="checkin_rate">Check-In Rate</div><div class="stat-change up">↑ 5% vs last month</div></div>
+        </div>
+        <div class="grid-2" style="margin-bottom:20px">
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:14px" data-i18n="dept_heatmap">Department Emotion Heatmap</h3>
+            <table class="data-table">
+              <thead><tr><th>Department</th><th>😊</th><th>😤</th><th>😰</th><th>Risk</th></tr></thead>
+              <tbody>
+                <tr><td>CS / IT</td><td>60%</td><td>25%</td><td>15%</td><td><span class="badge badge-yellow">Medium</span></td></tr>
+                <tr><td>Mechanical</td><td>70%</td><td>18%</td><td>12%</td><td><span class="badge badge-green">Low</span></td></tr>
+                <tr><td>Civil Eng.</td><td>55%</td><td>30%</td><td>15%</td><td><span class="badge badge-yellow">Medium</span></td></tr>
+                <tr><td>BBA/MBA</td><td>40%</td><td>38%</td><td>22%</td><td><span class="badge badge-red">High</span></td></tr>
+                <tr><td>Arts</td><td>75%</td><td>15%</td><td>10%</td><td><span class="badge badge-green">Low</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:14px" data-i18n="emotion_dist">Overall Emotion Distribution</h3>
+            <div class="chart-wrap" style="height:200px"><canvas id="counselorPieChart"></canvas></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="font-size:15px;margin-bottom:4px" data-i18n="weekly_trend">Weekly Emotion Trend</h3>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px" data-i18n="campus_wide">Campus-wide emotional patterns</p>
+          <div class="chart-wrap" style="height:200px"><canvas id="counselorLineChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- ALERTS -->
+      <div class="page" id="page-alerts">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+          <div>
+            <h2 style="font-size:22px;margin-bottom:4px" data-i18n="alerts_title">Alerts & Notifications</h2>
+            <p style="color:var(--text-muted);font-size:13px" data-i18n="alerts_sub">System alerts and wellness reminders</p>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary btn-sm" id="filterAll" onclick="filterAlerts('all',this)">All</button>
+            <button class="btn btn-secondary btn-sm" id="filterHigh" onclick="filterAlerts('high',this)">🔴 High</button>
+            <button class="btn btn-secondary btn-sm" id="filterMedium" onclick="filterAlerts('medium',this)">🟡 Medium</button>
+            <button class="btn btn-secondary btn-sm" id="filterLow" onclick="filterAlerts('low',this)">🟢 Low</button>
+          </div>
+        </div>
+        <div id="alertsList">
+          <div class="alert-item" data-level="high"><div class="alert-icon high">🚨</div><div class="alert-meta"><div class="alert-title" data-i18n="alert1">High stress pattern detected — Student #A7</div><div class="alert-desc" data-i18n="alert1d">3 consecutive days of stress level 5. Automated counselor referral triggered.</div></div><div class="alert-time">2h ago</div></div>
+          <div class="alert-item" data-level="medium"><div class="alert-icon medium">⚠️</div><div class="alert-meta"><div class="alert-title" data-i18n="alert2">Missed Check-Ins — 12 Students</div><div class="alert-desc" data-i18n="alert2d">Students have not completed check-in for 3+ days. Wellness reminder sent.</div></div><div class="alert-time">5h ago</div></div>
+          <div class="alert-item" data-level="low"><div class="alert-icon low">💚</div><div class="alert-meta"><div class="alert-title" data-i18n="alert3">Peer Connect Session Completed</div><div class="alert-desc" data-i18n="alert3d">4 peer-to-peer sessions completed today. Positive engagement reported.</div></div><div class="alert-time">8h ago</div></div>
+          <div class="alert-item" data-level="high"><div class="alert-icon high">🆘</div><div class="alert-meta"><div class="alert-title" data-i18n="alert4">Distress Keyword Flagged</div><div class="alert-desc" data-i18n="alert4d">Emergency resources shown to Student #B3. Counselor notified. Chat content not visible.</div></div><div class="alert-time">Yesterday</div></div>
+          <div class="alert-item" data-level="medium"><div class="alert-icon medium">📊</div><div class="alert-meta"><div class="alert-title" data-i18n="alert5">BBA Department Risk Elevated</div><div class="alert-desc" data-i18n="alert5d">Exam season correlation detected. Group wellness session recommended.</div></div><div class="alert-time">2 days ago</div></div>
+          <div class="alert-item" data-level="low"><div class="alert-icon low">🎉</div><div class="alert-meta"><div class="alert-title" data-i18n="alert6">Weekly Report Generated</div><div class="alert-desc" data-i18n="alert6d">Anonymized wellness report for Week 14 is ready for download.</div></div><div class="alert-time">3 days ago</div></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="page" id="page-settings">
+        <div style="max-width:600px">
+          <h2 style="font-size:22px;margin-bottom:4px" data-i18n="settings_title">Settings & Privacy</h2>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:24px" data-i18n="settings_sub">Manage your preferences and privacy controls</p>
+          
+          <div class="card" style="margin-bottom:16px">
+            <div class="settings-section" style="margin-bottom:0">
+              <h3 data-i18n="profile_settings">Profile</h3>
+              <div class="grid-2">
+                <div class="form-group"><label class="form-label">Name</label><input type="text" class="form-control" id="settingName" value="Arjun Sharma"/></div>
+                <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-control" value="arjun@college.edu" readonly style="opacity:.6"/></div>
+              </div>
+              <div class="form-group"><label class="form-label">Department</label><select class="form-control" id="settingDept"><option selected>Computer Science</option><option>Mechanical Eng.</option></select></div>
+              <button class="btn btn-primary btn-sm" data-i18n="save_profile">Save Profile</button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px">
+            <div class="settings-section" style="margin-bottom:0">
+              <h3 data-i18n="notifications_settings">Notifications</h3>
+              <div class="toggle-row"><div class="toggle-info"><div class="toggle-name" data-i18n="t1">Daily Check-In Reminder</div><div class="toggle-desc" data-i18n="t1d">Reminder at 9 AM every day</div></div><label class="toggle"><input type="checkbox" checked/><div class="toggle-slider"></div></label></div>
+              <div class="toggle-row"><div class="toggle-info"><div class="toggle-name" data-i18n="t2">Weekly Report</div><div class="toggle-desc" data-i18n="t2d">Get your weekly wellness summary</div></div><label class="toggle"><input type="checkbox" checked/><div class="toggle-slider"></div></label></div>
+              <div class="toggle-row"><div class="toggle-info"><div class="toggle-name" data-i18n="t3">Peer Connect Requests</div><div class="toggle-desc" data-i18n="t3d">Allow other students to connect with you</div></div><label class="toggle"><input type="checkbox"/><div class="toggle-slider"></div></label></div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px">
+            <div class="settings-section" style="margin-bottom:0">
+              <h3 data-i18n="privacy_settings">Privacy & Data</h3>
+              <div class="toggle-row"><div class="toggle-info"><div class="toggle-name" data-i18n="p1">Anonymous Analytics</div><div class="toggle-desc" data-i18n="p1d">Contribute anonymized data to campus wellness research</div></div><label class="toggle"><input type="checkbox" checked/><div class="toggle-slider"></div></label></div>
+              <div class="toggle-row"><div class="toggle-info"><div class="toggle-name" data-i18n="p2">Chatbot History</div><div class="toggle-desc" data-i18n="p2d">Keep last 30 days of chatbot sessions locally</div></div><label class="toggle"><input type="checkbox" checked/><div class="toggle-slider"></div></label></div>
+              <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-secondary btn-sm" data-i18n="export_data">⬇ Export My Data</button>
+                <button class="btn btn-danger btn-sm" data-i18n="delete_data">🗑 Delete All Data</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="settings-section" style="margin-bottom:0">
+              <h3 data-i18n="language_settings">Language</h3>
+              <div class="form-group">
+                <label class="form-label" data-i18n="preferred_lang">Preferred Language</label>
+                <select class="form-control" id="settingLang" onchange="setLang(this.value);document.getElementById('langSelect').value=this.value">
+                  <option value="en">English</option><option value="hi">Hindi</option><option value="mr">Marathi</option><option value="kn">Kannada</option><option value="ta">Tamil</option><option value="te">Telugu</option><option value="ml">Malayalam</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end page-body -->
+  </div><!-- end main-content -->
+</div><!-- end appWrap -->
+
+<script>
+// ============================================================
+// DATA & STATE
+// ============================================================
+const state = {
+  user: null,
+  role: 'student',
+  lang: 'en',
+  mood: null,
+  stress: 3,
+  sleep: null,
+  checkinDone: false,
+  peerState: 'idle', // idle | matching | chatting
+  peerMsgs: [],
+  chatHistory: []
+};
+
+const USERS = {
+  student: { name:'Arjun Sharma', role:'student', email:'arjun@college.edu', dept:'Computer Science' },
+  counselor: { name:'Dr. Priya Nair', role:'counselor', email:'counselor@college.edu', dept:'Wellness Dept.' }
+};
+
+// ============================================================
+// I18N
+// ============================================================
+const TRANSLATIONS = {
+  en: {
+    welcome_tag:'AI-Powered Wellness',hero_title:'Your Mental Wellness,<br/>Our Priority',hero_desc:'Track your emotions daily, get AI-powered insights, and connect with support — anonymously and safely.',
+    checkin_btn:'🌟 Daily Check-In',chat_btn:'Talk to AI',
+    stat1:'Positive Days',stat2:'Day Streak',stat3:'Avg Stress Level',stat4:'AI Sessions',
+    this_week:"This Week's Mood",last7:'Last 7 days overview',quick_actions:'Quick Actions',what_today:'What do you need today?',
+    qa1:'Log Today\'s Mood',qa1d:'Take your daily check-in',qa2:'AI Support Chat',qa2d:'Talk through how you\'re feeling',qa3:'Talk to Someone',qa3d:'Anonymous peer connection',
+    checkin_title:'Daily Emotion Check-In',checkin_sub:'Your responses are private and encrypted. Takes 2 minutes.',
+    how_feeling:'How are you feeling today?',
+    mood_happy:'Happy',mood_neutral:'Neutral',mood_stressed:'Stressed',mood_anxious:'Anxious',mood_lonely:'Lonely',
+    stress_level:'Stress Level',tell_more:'Tell us more (optional)',sleep_label:'Sleep Quality Last Night',
+    mood_placeholder:'I\'ve been feeling overwhelmed with assignments lately...',
+    ai_insight:'AI Insight',ai_instant:'Instant analysis',submit_checkin:'✓ Submit Check-In',view_suggestions:'View Suggestions →',
+    suggestions_title:'AI Wellness Suggestions',suggestions_sub:'Personalized for your emotional state today',
+    state_stressed:'Stressed',risk_medium:'Medium',immediate_relief:'Immediate Relief',weekly_plan:"This Week's Plan",monthly_chart:'Monthly Emotion Chart',monthly_desc:'Your emotional journey over 30 days',
+    s1:'4-7-8 Breathing Exercise',s1d:'Breathe in for 4s, hold 7s, out 8s. Repeat 3 times to activate your parasympathetic nervous system.',
+    s2:'Listen to Calm Music',s2d:'15 minutes of slow, instrumental music can reduce cortisol levels by up to 66%.',
+    s3:'Take a Study Break',s3d:"You've been studying for a while. A 10-minute break now will boost your productivity.",
+    s4:'20-Min Walk Daily',s4d:'Physical activity is proven to reduce anxiety. Even a short evening walk helps significantly.',
+    s5:'Sleep by 11 PM',s5d:'Your stress levels correlate with poor sleep this week. Aim for 7–8 hours consistently.',
+    s6:'Journaling Practice',s6d:'Write 3 things you\'re grateful for each morning. Scientifically shown to improve mood.',
+    chatbot_title:'AI Support Chatbot',chatbot_sub:'Available 24/7. Completely confidential.',
+    disclaimer:'This chatbot is not a medical professional. For emergencies, contact your counselor or call 112.',
+    bot_greet:'Hi there! 👋 I\'m MindBot, your 24/7 emotional wellness companion. How are you feeling right now?',
+    chat_placeholder:'Type a message...',quick_prompts:'Quick prompts:',
+    peer_title:'Talk to Someone Like You',peer_sub:'Connect anonymously with a fellow student who understands',
+    peer_disclaimer:'100% Anonymous. No names. No IDs. Conversations are not stored permanently. Do not share personal contact details.',
+    peer_heading:"You're not alone",peer_desc:"We'll match you with another student feeling similarly. This is a safe, judgment-free space.",
+    peer_mood_label:'Your current mood',peer_consent:'I agree to community guidelines: be kind, no sharing personal info, end chat if uncomfortable.',
+    find_peer:'🔍 Find a Peer',matching:'Finding your match...',matching_desc:'Looking for a student with a similar emotional state',
+    anon_peer:'Anonymous Peer',end_chat:'✕ End Chat',peer_connected_msg:'You are now connected with an anonymous peer. Be kind and supportive. 💚',
+    counselor_title:'Counselor Dashboard',counselor_sub:'Anonymized emotional analytics — April 2025',download_csv:'Download CSV Report',
+    total_students:'Active Students',high_risk:'High-Risk Alerts',chatbot_sessions:'Chatbot Sessions',checkin_rate:'Check-In Rate',
+    dept_heatmap:'Department Emotion Heatmap',emotion_dist:'Overall Emotion Distribution',weekly_trend:'Weekly Emotion Trend',campus_wide:'Campus-wide emotional patterns',
+    alerts_title:'Alerts & Notifications',alerts_sub:'System alerts and wellness reminders',
+    alert1:'High stress pattern detected — Student #A7',alert1d:'3 consecutive days of stress level 5. Automated counselor referral triggered.',
+    alert2:'Missed Check-Ins — 12 Students',alert2d:'Students have not completed check-in for 3+ days. Wellness reminder sent.',
+    alert3:'Peer Connect Session Completed',alert3d:'4 peer-to-peer sessions completed today. Positive engagement reported.',
+    alert4:'Distress Keyword Flagged',alert4d:'Emergency resources shown to Student #B3. Counselor notified. Chat content not visible.',
+    alert5:'BBA Department Risk Elevated',alert5d:'Exam season correlation detected. Group wellness session recommended.',
+    alert6:'Weekly Report Generated',alert6d:'Anonymized wellness report for Week 14 is ready for download.',
+    settings_title:'Settings & Privacy',settings_sub:'Manage your preferences and privacy controls',
+    profile_settings:'Profile',save_profile:'Save Profile',notifications_settings:'Notifications',privacy_settings:'Privacy & Data',language_settings:'Language',preferred_lang:'Preferred Language',
+    t1:'Daily Check-In Reminder',t1d:'Reminder at 9 AM every day',t2:'Weekly Report',t2d:'Get your weekly wellness summary',t3:'Peer Connect Requests',t3d:'Allow other students to connect with you',
+    p1:'Anonymous Analytics',p1d:'Contribute anonymized data to campus wellness research',p2:'Chatbot History',p2d:'Keep last 30 days of chatbot sessions locally',
+    export_data:'⬇ Export My Data',delete_data:'🗑 Delete All Data',
+    signin:'Sign In',email:'Email Address',password:'Password',
+  },
+  hi: {
+    welcome_tag:'AI-संचालित वेलनेस',hero_title:'आपकी मानसिक भलाई,<br/>हमारी प्राथमिकता',hero_desc:'रोज़ाना अपनी भावनाओं को ट्रैक करें, AI अंतर्दृष्टि पाएं, और गुमनाम रूप से समर्थन से जुड़ें।',
+    checkin_btn:'🌟 दैनिक चेक-इन',chat_btn:'AI से बात करें',
+    stat1:'सकारात्मक दिन',stat2:'दिन की लकीर',stat3:'औसत तनाव स्तर',stat4:'AI सत्र',
+    this_week:'इस सप्ताह का मूड',last7:'पिछले 7 दिनों का अवलोकन',quick_actions:'त्वरित क्रियाएं',what_today:'आज आपको क्या चाहिए?',
+    qa1:'आज का मूड लॉग करें',qa1d:'अपना दैनिक चेक-इन लें',qa2:'AI सहायता चैट',qa2d:'अपनी भावनाओं के बारे में बात करें',qa3:'किसी से बात करें',qa3d:'गुमनाम सहकर्मी कनेक्शन',
+    checkin_title:'दैनिक भावना चेक-इन',checkin_sub:'आपकी प्रतिक्रियाएं निजी और एन्क्रिप्टेड हैं। 2 मिनट लगते हैं।',
+    how_feeling:'आप आज कैसा महसूस कर रहे हैं?',
+    mood_happy:'खुश',mood_neutral:'सामान्य',mood_stressed:'तनावग्रस्त',mood_anxious:'चिंतित',mood_lonely:'अकेला',
+    stress_level:'तनाव स्तर',tell_more:'हमें और बताएं (वैकल्पिक)',sleep_label:'कल रात की नींद की गुणवत्ता',
+    mood_placeholder:'मैं हाल ही में असाइनमेंट से अभिभूत महसूस कर रहा हूं...',
+    ai_insight:'AI अंतर्दृष्टि',ai_instant:'तत्काल विश्लेषण',submit_checkin:'✓ चेक-इन जमा करें',view_suggestions:'सुझाव देखें →',
+    suggestions_title:'AI वेलनेस सुझाव',suggestions_sub:'आपकी भावनात्मक स्थिति के अनुसार व्यक्तिगत',
+    state_stressed:'तनावग्रस्त',risk_medium:'मध्यम',
+    chatbot_title:'AI सहायता चैटबॉट',chatbot_sub:'24/7 उपलब्ध। पूरी तरह गोपनीय।',
+    disclaimer:'यह चैटबॉट चिकित्सा पेशेवर नहीं है। आपात स्थिति के लिए 112 पर कॉल करें।',
+    bot_greet:'नमस्ते! 👋 मैं MindBot हूं, आपका 24/7 भावनात्मक साथी। आप अभी कैसा महसूस कर रहे हैं?',
+    chat_placeholder:'संदेश टाइप करें...',quick_prompts:'त्वरित संकेत:',
+    peer_title:'अपने जैसे किसी से बात करें',peer_sub:'समझने वाले साथी छात्र से गुमनाम रूप से जुड़ें',
+    peer_disclaimer:'100% गुमनाम। कोई नाम नहीं। कोई ID नहीं। व्यक्तिगत संपर्क विवरण साझा न करें।',
+    peer_heading:'आप अकेले नहीं हैं',peer_desc:'हम आपको समान भावनात्मक स्थिति वाले छात्र से मिलाएंगे।',
+    peer_mood_label:'आपका वर्तमान मूड',peer_consent:'मैं दिशानिर्देशों से सहमत हूं: दयालु रहें, व्यक्तिगत जानकारी साझा न करें।',
+    find_peer:'🔍 साथी खोजें',matching:'आपका मिलान खोजा जा रहा है...',matching_desc:'समान भावनात्मक स्थिति वाले छात्र की तलाश',
+    anon_peer:'गुमनाम साथी',end_chat:'✕ चैट समाप्त करें',peer_connected_msg:'आप एक गुमनाम साथी से जुड़ गए हैं। दयालु रहें। 💚',
+    counselor_title:'परामर्शदाता डैशबोर्ड',counselor_sub:'गुमनाम भावनात्मक विश्लेषण',download_csv:'CSV रिपोर्ट डाउनलोड करें',
+    alerts_title:'अलर्ट और सूचनाएं',alerts_sub:'सिस्टम अलर्ट और वेलनेस रिमाइंडर',
+    settings_title:'सेटिंग्स और गोपनीयता',settings_sub:'अपनी प्राथमिकताएं और गोपनीयता नियंत्रण प्रबंधित करें',
+    signin:'साइन इन करें',email:'ईमेल पता',password:'पासवर्ड',
+  },
+  mr: {
+    welcome_tag:'AI-चालित वेलनेस',hero_title:'तुमचे मानसिक आरोग्य,<br/>आमची प्राथमिकता',hero_desc:'दररोज भावना ट्रॅक करा, AI अंतर्दृष्टी मिळवा आणि निनावीपणे जोडा.',
+    checkin_btn:'🌟 दैनंदिन चेक-इन',chat_btn:'AI शी बोला',
+    stat1:'सकारात्मक दिवस',stat2:'दिवस स्ट्रीक',stat3:'सरासरी ताण',stat4:'AI सत्रे',
+    this_week:'या आठवड्याचा मूड',last7:'मागील ७ दिवसांचे अवलोकन',quick_actions:'त्वरित क्रिया',what_today:'आज तुम्हाला काय हवे?',
+    qa1:'आजचा मूड नोंदवा',qa1d:'दैनंदिन चेक-इन करा',qa2:'AI सहाय्य चॅट',qa2d:'तुमच्या भावनांबद्दल बोला',qa3:'कुणाशी बोला',qa3d:'निनावी सहाध्यायी कनेक्शन',
+    checkin_title:'दैनंदिन भावना चेक-इन',checkin_sub:'तुमची उत्तरे खाजगी आणि एनक्रिप्टेड आहेत. २ मिनिटे लागतात.',
+    how_feeling:'तुम्हाला आज कसे वाटत आहे?',
+    mood_happy:'आनंदी',mood_neutral:'तटस्थ',mood_stressed:'ताणलेले',mood_anxious:'चिंताग्रस्त',mood_lonely:'एकटे',
+    stress_level:'ताण पातळी',tell_more:'आणखी सांगा (पर्यायी)',sleep_label:'काल रात्रीची झोपेची गुणवत्ता',
+    mood_placeholder:'मला अलीकडे असाइनमेंटमुळे खूप ताण येत आहे...',
+    ai_insight:'AI अंतर्दृष्टी',ai_instant:'तात्काळ विश्लेषण',submit_checkin:'✓ चेक-इन सबमिट करा',view_suggestions:'सूचना पहा →',
+    chatbot_title:'AI सहाय्य चॅटबॉट',chatbot_sub:'२४/७ उपलब्ध. पूर्णपणे गोपनीय.',
+    disclaimer:'हा चॅटबॉट वैद्यकीय व्यावसायिक नाही. आणीबाणीसाठी 112 वर कॉल करा.',
+    bot_greet:'नमस्ते! 👋 मी MindBot आहे. तुम्हाला आत्ता कसे वाटत आहे?',
+    chat_placeholder:'संदेश टाइप करा...',
+    peer_title:'तुमच्यासारख्या कुणाशी बोला',peer_sub:'एखाद्या सहाध्यायाशी निनावीपणे जोडा',
+    find_peer:'🔍 सहाध्याय शोधा',matching:'तुमचा मिलाप शोधत आहे...',
+    alerts_title:'सूचना आणि अलर्ट',settings_title:'सेटिंग्ज आणि गोपनीयता',
+    signin:'साइन इन करा',email:'ईमेल पत्ता',password:'पासवर्ड',
+  },
+  kn: {
+    welcome_tag:'AI-ಚಾಲಿತ ವೆಲ್ನೆಸ್',hero_title:'ನಿಮ್ಮ ಮಾನಸಿಕ ಆರೋಗ್ಯ,<br/>ನಮ್ಮ ಆದ್ಯತೆ',hero_desc:'ಪ್ರತಿದಿನ ನಿಮ್ಮ ಭಾವನೆಗಳನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಿ, AI ಒಳನೋಟಗಳನ್ನು ಪಡೆಯಿರಿ.',
+    checkin_btn:'🌟 ದೈನಂದಿನ ಚೆಕ್-ಇನ್',chat_btn:'AI ಜೊತೆ ಮಾತನಾಡಿ',
+    stat1:'ಸಕಾರಾತ್ಮಕ ದಿನಗಳು',stat2:'ದಿನ ಸ್ಟ್ರೀಕ್',stat3:'ಸರಾಸರಿ ಒತ್ತಡ',stat4:'AI ಸೆಷನ್‌ಗಳು',
+    checkin_title:'ದೈನಂದಿನ ಭಾವನೆ ಚೆಕ್-ಇನ್',how_feeling:'ನೀವು ಇಂದು ಹೇಗೆ ಅನಿಸುತ್ತಿದ್ದೀರಿ?',
+    mood_happy:'ಸಂತೋಷ',mood_neutral:'ಸಾಮಾನ್ಯ',mood_stressed:'ಒತ್ತಡ',mood_anxious:'ಆತಂಕ',mood_lonely:'ಒಂಟಿ',
+    disclaimer:'ಈ ಚಾಟ್‌ಬಾಟ್ ವೈದ್ಯಕೀಯ ವೃತ್ತಿಪರರಲ್ಲ. ತುರ್ತು ಪರಿಸ್ಥಿತಿಗಳಿಗಾಗಿ 112 ಗೆ ಕರೆ ಮಾಡಿ.',
+    bot_greet:'ನಮಸ್ಕಾರ! 👋 ನಾನು MindBot. ನೀವು ಈಗ ಹೇಗೆ ಅನಿಸುತ್ತಿದ್ದೀರಿ?',
+    signin:'ಸೈನ್ ಇನ್',email:'ಇಮೇಲ್ ವಿಳಾಸ',password:'ಪಾಸ್‌ವರ್ಡ್',
+    alerts_title:'ಎಚ್ಚರಿಕೆಗಳು ಮತ್ತು ಅಧಿಸೂಚನೆಗಳು',settings_title:'ಸೆಟ್ಟಿಂಗ್‌ಗಳು ಮತ್ತು ಗೌಪ್ಯತೆ',
+    peer_title:'ನಿಮ್ಮಂತಹ ಯಾರೊಂದಿಗಾದರೂ ಮಾತನಾಡಿ',find_peer:'🔍 ಸಹಚರನನ್ನು ಹುಡುಕಿ',
+  },
+  ta: {
+    welcome_tag:'AI-இயக்கப்படும் வெல்னஸ்',hero_title:'உங்கள் மனநல ஆரோக்கியம்,<br/>எங்கள் முன்னுரிமை',hero_desc:'தினமும் உணர்வுகளை கண்காணியுங்கள், AI நுண்ணறிவு பெறுங்கள்.',
+    checkin_btn:'🌟 தினசரி செக்-இன்',chat_btn:'AI உடன் பேசுங்கள்',
+    stat1:'நேர்மறை நாட்கள்',stat2:'நாள் தொடர்',stat3:'சராசரி மன அழுத்தம்',stat4:'AI அமர்வுகள்',
+    checkin_title:'தினசரி உணர்வு செக்-இன்',how_feeling:'இன்று எப்படி உணர்கிறீர்கள்?',
+    mood_happy:'மகிழ்ச்சி',mood_neutral:'சாதாரணம்',mood_stressed:'மன அழுத்தம்',mood_anxious:'கவலை',mood_lonely:'தனிமை',
+    disclaimer:'இந்த சாட்போட் மருத்துவ நிபுணர் அல்ல. அவசரநிலைக்கு 112 அழைக்கவும்.',
+    bot_greet:'வணக்கம்! 👋 நான் MindBot. நீங்கள் இப்போது எப்படி உணர்கிறீர்கள்?',
+    signin:'உள்நுழைய',email:'மின்னஞ்சல் முகவரி',password:'கடவுச்சொல்',
+    alerts_title:'எச்சரிக்கைகள் மற்றும் அறிவிப்புகள்',settings_title:'அமைப்புகள் மற்றும் தனியுரிமை',
+    peer_title:'உங்களைப் போன்ற யாரோடாவது பேசுங்கள்',find_peer:'🔍 சக மாணவரை கண்டுபிடி',
+  },
+  te: {
+    welcome_tag:'AI-శక్తితో వెల్నెస్',hero_title:'మీ మానసిక ఆరోగ్యం,<br/>మా ప్రాధాన్యత',hero_desc:'ప్రతిరోజు మీ భావాలను ట్రాక్ చేయండి, AI అంతర్దృష్టులు పొందండి.',
+    checkin_btn:'🌟 రోజువారీ చెక్-ఇన్',chat_btn:'AI తో మాట్లాడండి',
+    stat1:'సానుకూల రోజులు',stat2:'రోజు స్ట్రీక్',stat3:'సగటు ఒత్తిడి',stat4:'AI సెషన్లు',
+    checkin_title:'రోజువారీ భావన చెక్-ఇన్',how_feeling:'మీరు ఈరోజు ఎలా అనిపిస్తున్నారు?',
+    mood_happy:'సంతోషంగా',mood_neutral:'సాధారణంగా',mood_stressed:'ఒత్తిడిలో',mood_anxious:'ఆందోళనలో',mood_lonely:'ఒంటరిగా',
+    disclaimer:'ఈ చాట్‌బాట్ వైద్య నిపుణుడు కాదు. అత్యవసర పరిస్థితులకు 112కి కాల్ చేయండి.',
+    bot_greet:'నమస్కారం! 👋 నేను MindBot. మీరు ఇప్పుడు ఎలా అనిపిస్తున్నారు?',
+    signin:'సైన్ ఇన్',email:'ఇమెయిల్ చిరునామా',password:'పాస్‌వర్డ్',
+    alerts_title:'హెచ్చరికలు మరియు నోటిఫికేషన్లు',settings_title:'సెట్టింగ్‌లు మరియు గోపనీయత',
+    peer_title:'మీలాంటి వారితో మాట్లాడండి',find_peer:'🔍 సహాధ్యాయిని కనుగొనండి',
+  },
+  ml: {
+    welcome_tag:'AI-ശക്തിയുള്ള വെൽനസ്',hero_title:'നിങ്ങളുടെ മാനസിക ആരോഗ്യം,<br/>ഞങ്ങളുടെ മുൻഗണന',hero_desc:'ദൈനംദിന വികാരങ്ങൾ ട്രാക്ക് ചെയ്യൂ, AI ഉൾക്കാഴ്ച നേടൂ.',
+    checkin_btn:'🌟 ദൈനംദിന ചെക്ക്-ഇൻ',chat_btn:'AI-ൽ സംസാരിക്കൂ',
+    stat1:'പോസിറ്റീവ് ദിവസങ്ങൾ',stat2:'ദിവസ സ്ട്രീക്ക്',stat3:'ശരാശരി സ്ട്രെസ്',stat4:'AI സെഷനുകൾ',
+    checkin_title:'ദൈനംദിന വൈകാരിക ചെക്ക്-ഇൻ',how_feeling:'ഇന്ന് നിങ്ങൾക്ക് എങ്ങനെ തോന്നുന്നു?',
+    mood_happy:'സന്തോഷം',mood_neutral:'സ്വാഭാവിക',mood_stressed:'സ്ട്രെസ്',mood_anxious:'ഉത്കണ്ഠ',mood_lonely:'ഒറ്റപ്പെടൽ',
+    disclaimer:'ഈ ചാറ്റ്ബോട്ട് ഒരു മെഡിക്കൽ പ്രൊഫഷണൽ അല്ല. അടിയന്തരഘട്ടത്തിൽ 112 വിളിക്കൂ.',
+    bot_greet:'നമസ്കാരം! 👋 ഞാൻ MindBot. നിങ്ങൾ ഇപ്പോൾ എങ്ങനെ തോന്നുന്നു?',
+    signin:'സൈൻ ഇൻ',email:'ഇമെയിൽ വിലാസം',password:'പാസ്‌വേഡ്',
+    alerts_title:'അലർട്ടുകൾ & അറിയിപ്പുകൾ',settings_title:'ക്രമീകരണങ്ങൾ & സ്വകാര്യത',
+    peer_title:'നിങ്ങളെ പോലെ ഒരാളോട് സംസാരിക്കൂ',find_peer:'🔍 സഹ വിദ്യാർഥിയെ കണ്ടെത്തൂ',
+  }
+};
+
+function t(key) {
+  const lang = state.lang;
+  return (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) || (TRANSLATIONS['en'][key]) || key;
+}
+
+function setLang(lang) {
+  state.lang = lang;
+  localStorage.setItem('mb_lang', lang);
+  document.getElementById('langSelect').value = lang;
+  if(document.getElementById('settingLang')) document.getElementById('settingLang').value = lang;
+  applyTranslations();
+}
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = t(key);
+    if(val.includes('<br/>')) el.innerHTML = val; else el.textContent = val;
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    el.placeholder = t(el.getAttribute('data-i18n-ph'));
+  });
+}
+
+// ============================================================
+// NAVIGATION MENUS
+// ============================================================
+const STUDENT_NAV = [
+  {section:'Main', items:[
+    {id:'home',icon:'🏠',label:'Dashboard'},{id:'checkin',icon:'📝',label:'Daily Check-In'},{id:'suggestions',icon:'💡',label:'AI Suggestions'},
+  ]},
+  {section:'Support', items:[
+    {id:'chatbot',icon:'🤖',label:'AI Chatbot'},{id:'peer',icon:'🤝',label:'Peer Connect',badge:'New'},
+  ]},
+  {section:'Account', items:[
+    {id:'alerts',icon:'🔔',label:'Alerts',badge:'3'},{id:'settings',icon:'⚙️',label:'Settings'},
+  ]}
+];
+const COUNSELOR_NAV = [
+  {section:'Analytics', items:[
+    {id:'home',icon:'🏠',label:'Overview'},{id:'counselor',icon:'📊',label:'Dashboard'},{id:'alerts',icon:'🚨',label:'Alerts',badge:'8'},
+  ]},
+  {section:'Account', items:[
+    {id:'settings',icon:'⚙️',label:'Settings'},
+  ]}
+];
+
+function buildNav(role) {
+  const nav = role==='counselor' ? COUNSELOR_NAV : STUDENT_NAV;
+  const container = document.getElementById('sidebarNav');
+  container.innerHTML = '';
+  nav.forEach(section => {
+    const secEl = document.createElement('div');
+    secEl.className = 'nav-section';
+    secEl.innerHTML = `<div class="nav-label">${section.section}</div>`;
+    section.items.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'nav-item' + (item.id === currentPage ? ' active' : '');
+      el.setAttribute('data-page', item.id);
+      el.innerHTML = `<span class="nav-icon">${item.icon}</span><span>${item.label}</span>${item.badge?`<span class="nav-badge">${item.badge}</span>`:''}`;
+      el.onclick = () => navigate(item.id);
+      secEl.appendChild(el);
+    });
+    container.appendChild(secEl);
+  });
+}
+
+// ============================================================
+// AUTH
+// ============================================================
+let currentRole = 'student';
+function selectRole(role, btn) {
+  currentRole = role;
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('loginForm').style.display = tab==='login' ? '' : 'none';
+  document.getElementById('signupForm').style.display = tab==='signup' ? '' : 'none';
+}
+function quickLogin(role) {
+  state.user = USERS[role];
+  state.role = role;
+  launchApp();
+}
+function doLogin() {
+  const email = document.getElementById('loginEmail').value;
+  const pass = document.getElementById('loginPass').value;
+  if(!email || !pass) { alert('Please fill in all fields'); return; }
+  state.user = { name: email.split('@')[0].charAt(0).toUpperCase()+email.split('@')[0].slice(1), role: currentRole, email };
+  state.role = currentRole;
+  launchApp();
+}
+function doSignup() {
+  const consent = document.getElementById('consentBox').checked;
+  if(!consent) { alert('Please agree to the privacy policy to continue.'); return; }
+  const name = document.getElementById('regName').value;
+  const email = document.getElementById('regEmail').value;
+  if(!name || !email) { alert('Please fill in all fields'); return; }
+  state.user = { name, role: currentRole, email };
+  state.role = currentRole;
+  launchApp();
+}
+function doLogout() {
+  document.getElementById('appWrap').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  state.user = null;
+}
+function launchApp() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('appWrap').style.display = 'flex';
+  document.getElementById('userAvatarSidebar').textContent = state.user.name.charAt(0).toUpperCase();
+  document.getElementById('userNameSidebar').textContent = state.user.name;
+  document.getElementById('userRoleSidebar').textContent = state.role.charAt(0).toUpperCase()+state.role.slice(1);
+  const lang = localStorage.getItem('mb_lang') || 'en';
+  setLang(lang);
+  buildNav(state.role);
+  const firstPage = state.role === 'counselor' ? 'counselor' : 'home';
+  navigate(firstPage);
+  initCharts();
+  updateDate();
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+let currentPage = 'home';
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('page-'+page);
+  if(el) el.classList.add('active');
+  currentPage = page;
+  buildNav(state.role);
+  const titles = {
+    home:'Dashboard',checkin:'Daily Check-In',suggestions:'AI Suggestions',chatbot:'AI Chatbot',
+    peer:'Peer Connect',counselor:'Counselor Dashboard',alerts:'Alerts',settings:'Settings'
+  };
+  document.getElementById('pageTitle').textContent = titles[page] || page;
+  closeSidebar();
+  if(page==='chatbot') scrollChatBottom('chatMessages');
+  if(page==='peer') scrollChatBottom('peerMessages');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// ============================================================
+// DATE
+// ============================================================
+function updateDate() {
+  const d = new Date();
+  document.getElementById('pageDate').textContent = d.toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+
+// ============================================================
+// CHECK-IN
+// ============================================================
+function selectMood(mood, el) {
+  state.mood = mood;
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function updateStress(val) {
+  state.stress = parseInt(val);
+  document.getElementById('stressVal').textContent = '— ' + val;
+}
+function selectSleep(val, btn) {
+  state.sleep = val;
+  document.querySelectorAll('#sleep1,#sleep2,#sleep3').forEach(b => { b.classList.remove('btn-primary'); b.classList.add('btn-secondary'); });
+  btn.classList.add('btn-primary'); btn.classList.remove('btn-secondary');
+}
+function submitCheckin() {
+  if(!state.mood) { alert('Please select a mood first!'); return; }
+  const text = document.getElementById('moodText').value;
+  const insight = generateInsight(state.mood, state.stress, text);
+  document.getElementById('aiInsightText').textContent = insight.text;
+  const tags = document.getElementById('insightTags');
+  tags.innerHTML = insight.tags.map(t => `<span class="insight-pill">${t}</span>`).join('');
+  document.getElementById('checkinResult').style.display = '';
+  state.checkinDone = true;
+}
+function generateInsight(mood, stress, text) {
+  const insights = {
+    happy: { text: "Great to hear you're feeling happy! 😊 Your positive mindset is wonderful. Keep nurturing it with social connections and activities you love. Your stress level is manageable — maintain this momentum!", tags:['😊 Happy','🌱 Low Risk','✨ Keep it up','💪 Resilient'] },
+    neutral: { text: "You're feeling neutral today — that's completely okay. Neutral days are a chance to reflect and prepare. Consider a short mindfulness session or journaling to understand any underlying emotions.", tags:['😐 Neutral','🧘 Mindfulness Suggested','📝 Journal Today','🌤 Stable'] },
+    stressed: { text: `Stress level ${stress}/5 detected. 📊 Your body and mind need attention. Try the 4-7-8 breathing technique right now, and consider breaking your tasks into smaller chunks. You're not alone in this!`, tags:['😤 Stressed','⚠️ Moderate Risk','🌬️ Breathing Exercise','📋 Task Planning'] },
+    anxious: { text: "Anxiety can feel overwhelming, but it's manageable. 💙 Ground yourself with the 5-4-3-2-1 technique: notice 5 things you see, 4 you can touch, 3 you hear, 2 you smell, 1 you taste.", tags:['😰 Anxious','🆘 Attention Needed','🤖 Chat Support Available','🧘 Grounding Technique'] },
+    lonely: { text: "Feeling lonely is valid and common, especially during intense academic periods. 💜 Consider reaching out through our anonymous Peer Connect feature — someone just like you is waiting to listen.", tags:['😔 Lonely','🤝 Peer Connect Recommended','💬 Talk to Someone','💙 You Matter'] },
+  };
+  return insights[mood] || insights.neutral;
+}
+
+// ============================================================
+// CHATBOT
+// ============================================================
+const BOT_RESPONSES = {
+  greet: ["Hi there! I'm glad you reached out. How are you feeling right now?", "Hello! It takes courage to talk about feelings. I'm here for you. What's on your mind?"],
+  anxious: ["I hear you — anxiety can feel really overwhelming. 💙 Try this: take a slow deep breath in for 4 counts, hold for 7, and exhale for 8. Repeat 3 times. How does that feel?", "Anxiety is your body's alarm system — sometimes it fires when it doesn't need to. Let's work through this together. Can you tell me what's making you feel anxious?"],
+  stressed: ["It sounds like you're carrying a lot right now. 😤 Let's take a step back — is there one specific thing causing the most stress? Sometimes naming it helps shrink it.", "Stress is your body's way of saying you care. But too much of it wears you down. Have you had a break today? Even 10 minutes away from your desk can help."],
+  sleep: ["Poor sleep and stress are deeply connected — it's a tough cycle. 😴 Try to avoid screens 30 minutes before bed, keep your room cool, and maybe listen to calm music. Would you like some sleep hygiene tips?", "Sleep is when your brain processes emotions and consolidates memories. If you're struggling, try the 'body scan' relaxation technique. Shall I guide you through it?"],
+  exam: ["Exam pressure is real and valid! 📚 Here's what helps: study in 25-minute focused sprints (Pomodoro technique), take breaks, stay hydrated, and remember — your worth isn't defined by grades.", "I understand exam pressure can feel intense. Have you tried making a study schedule? Breaking it into small chunks makes it feel much more manageable."],
+  calm: ["Let's calm down together. 🌿 Close your eyes if possible. Take 3 slow breaths. Picture a peaceful place — a garden, a beach, wherever feels safe. You're doing great just by being here.", "Here's a quick calm-down exercise: squeeze your hands into fists for 5 seconds, then slowly release. Do this 3 times while breathing deeply. How do you feel now?"],
+  default: ["I'm here with you. 💙 Tell me more about what you're going through.", "Thank you for sharing that with me. You're not alone in this. What would feel most helpful right now — talking it through, some breathing exercises, or just being heard?", "That sounds really tough. It takes strength to reach out. I'm listening — what's weighing on you most?"]
+};
+
+const DISTRESS_KEYWORDS = ['suicide','die','kill myself','hurt myself','can\'t go on','hopeless','no point'];
+
+function getResponse(msg) {
+  const m = msg.toLowerCase();
+  // Check distress keywords first
+  for(const kw of DISTRESS_KEYWORDS) {
+    if(m.includes(kw)) return {
+      text: "⚠️ I'm deeply concerned about what you've shared. Please know you are not alone and help is available RIGHT NOW. Please contact your college counselor immediately or call the iCall helpline: 9152987821. You matter. 💙",
+      emergency: true
+    };
+  }
+  if(m.match(/anxious|anxiety|panic|worry|worried/)) return {text: randomFrom(BOT_RESPONSES.anxious)};
+  if(m.match(/stress|stressed|overwhelm|pressure/)) return {text: randomFrom(BOT_RESPONSES.stressed)};
+  if(m.match(/sleep|insomnia|tired|exhausted/)) return {text: randomFrom(BOT_RESPONSES.sleep)};
+  if(m.match(/exam|test|study|assignment|marks|grade/)) return {text: randomFrom(BOT_RESPONSES.exam)};
+  if(m.match(/calm|relax|breathe|peace/)) return {text: randomFrom(BOT_RESPONSES.calm)};
+  if(m.match(/hello|hi|hey|good|fine/)) return {text: randomFrom(BOT_RESPONSES.greet)};
+  return {text: randomFrom(BOT_RESPONSES.default)};
+}
+
+function randomFrom(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if(!msg) return;
+  addChatMsg('chatMessages', msg, 'user');
+  input.value = '';
+  showTyping('chatMessages');
+  setTimeout(() => {
+    removeTyping('chatMessages');
+    const resp = getResponse(msg);
+    addChatMsg('chatMessages', resp.text, 'bot');
+    if(resp.emergency) {
+      // Show emergency banner
+    }
+  }, 900 + Math.random()*600);
+}
+
+function sendQuick(text) {
+  document.getElementById('chatInput').value = text;
+  sendMessage();
+}
+
+function clearChat() {
+  const el = document.getElementById('chatMessages');
+  el.innerHTML = `<div class="msg bot"><div class="msg-bubble" data-i18n="bot_greet">${t('bot_greet')}</div><div class="msg-time">Just now</div></div>`;
+}
+
+function addChatMsg(containerId, text, type) {
+  const container = document.getElementById(containerId);
+  const div = document.createElement('div');
+  div.className = 'msg ' + type;
+  const now = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  div.innerHTML = `<div class="msg-bubble">${text}</div><div class="msg-time">${now}</div>`;
+  container.appendChild(div);
+  scrollChatBottom(containerId);
+}
+
+function showTyping(containerId) {
+  const container = document.getElementById(containerId);
+  const div = document.createElement('div');
+  div.className = 'msg bot'; div.id = 'typing-indicator';
+  div.innerHTML = `<div class="msg-bubble"><div class="loading-dots"><span></span><span></span><span></span></div></div>`;
+  container.appendChild(div);
+  scrollChatBottom(containerId);
+}
+function removeTyping(containerId) {
+  const el = document.getElementById('typing-indicator');
+  if(el) el.remove();
+}
+function scrollChatBottom(id) {
+  const el = document.getElementById(id);
+  if(el) setTimeout(() => el.scrollTop = el.scrollHeight, 50);
+}
+
+// ============================================================
+// PEER CHAT
+// ============================================================
+const PEER_RESPONSES = [
+  "I totally understand how you feel. I've been there too. 💙",
+  "Thank you for sharing that. It means a lot that you trust this space.",
+  "That sounds really tough. Have you talked to anyone else about this?",
+  "Honestly, I feel the same way sometimes. You're definitely not alone.",
+  "Have you tried taking a break? Sometimes a little distance helps.",
+  "I think you're being really brave by talking about this. 💪",
+  "What helps me is listening to music and going for a walk. Maybe try that?",
+  "We'll get through this — one step at a time. 🌱"
+];
+
+function startMatching() {
+  const consent = document.getElementById('peerConsent').checked;
+  if(!consent) { alert('Please agree to the community guidelines first.'); return; }
+  document.getElementById('peerLanding').style.display = 'none';
+  document.getElementById('peerMatching').style.display = '';
+  setTimeout(() => {
+    document.getElementById('peerMatching').style.display = 'none';
+    document.getElementById('peerChat').style.display = '';
+    scrollChatBottom('peerMessages');
+    // Simulate peer saying hi after 2s
+    setTimeout(() => {
+      addChatMsg('peerMessages', "Hey... I'm here. I've been feeling lonely too. It's nice to know someone else gets it. 😔", 'bot');
+    }, 2000);
+  }, 3000);
+}
+
+function sendPeerMsg() {
+  const input = document.getElementById('peerInput');
+  const msg = input.value.trim();
+  if(!msg) return;
+  // Safety filter
+  for(const kw of DISTRESS_KEYWORDS) {
+    if(msg.toLowerCase().includes(kw)) {
+      document.getElementById('peerSafetyMsg').style.display = '';
+      document.getElementById('peerSafetyMsg').innerHTML = '🆘 <strong>If you are in crisis, please reach out immediately:</strong> iCall: 9152987821 | College Counselor | Emergency: 112. You are not alone. 💙';
+    }
+  }
+  addChatMsg('peerMessages', msg, 'user');
+  input.value = '';
+  setTimeout(() => {
+    addChatMsg('peerMessages', randomFrom(PEER_RESPONSES), 'bot');
+  }, 1200 + Math.random()*800);
+}
+
+function endPeerChat() {
+  if(confirm('Are you sure you want to end this chat?')) {
+    document.getElementById('peerChat').style.display = 'none';
+    document.getElementById('peerLanding').style.display = '';
+    document.getElementById('peerConsent').checked = false;
+  }
+}
+
+// ============================================================
+// ALERTS FILTER
+// ============================================================
+function filterAlerts(level, btn) {
+  document.querySelectorAll('#filterAll,#filterHigh,#filterMedium,#filterLow').forEach(b => { b.classList.remove('btn-primary'); b.classList.add('btn-secondary'); });
+  btn.classList.add('btn-primary'); btn.classList.remove('btn-secondary');
+  document.querySelectorAll('.alert-item').forEach(el => {
+    el.style.display = (level==='all' || el.getAttribute('data-level')===level) ? '' : 'none';
+  });
+}
+
+// ============================================================
+// CSV DOWNLOAD
+// ============================================================
+function downloadCSV() {
+  const csv = `Department,Happy%,Stressed%,Anxious%,Risk Level\nCS/IT,60,25,15,Medium\nMechanical,70,18,12,Low\nCivil Eng.,55,30,15,Medium\nBBA/MBA,40,38,22,High\nArts,75,15,10,Low`;
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'wellness-report.csv'; a.click();
+}
+
+// ============================================================
+// CHARTS
+// ============================================================
+let chartsInited = false;
+function initCharts() {
+  if(chartsInited) return; chartsInited = true;
+  const gridColor = '#ffffff0a';
+  const labelColor = '#64748b';
+
+  // Home chart
+  const homeCtx = document.getElementById('homeChart');
+  if(homeCtx) new Chart(homeCtx, {
+    type:'line',
+    data:{
+      labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      datasets:[
+        {label:'Mood',data:[4,2,3,4,3,5,4],borderColor:'#6ee7b7',backgroundColor:'#6ee7b710',tension:.4,fill:true,pointBackgroundColor:'#6ee7b7',pointRadius:4},
+        {label:'Stress',data:[2,4,3,2,3,1,2],borderColor:'#fb7185',backgroundColor:'#fb718510',tension:.4,fill:false,pointBackgroundColor:'#fb7185',pointRadius:4}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:labelColor,font:{family:'DM Sans',size:11}}}},scales:{x:{grid:{color:gridColor},ticks:{color:labelColor,font:{size:11}}},y:{grid:{color:gridColor},ticks:{color:labelColor,font:{size:11}},min:0,max:6}}}
+  });
+
+  // Monthly chart
+  const monthlyCtx = document.getElementById('monthlyChart');
+  if(monthlyCtx) {
+    const labels = Array.from({length:30},(_,i)=>i+1);
+    const data = [3,3,4,4,3,2,2,3,4,4,3,3,2,1,2,3,4,4,5,4,3,3,4,4,3,4,4,3,4,4];
+    new Chart(monthlyCtx, {
+      type:'bar',
+      data:{labels,datasets:[{label:'Mood',data,backgroundColor:data.map(v=>v>=4?'#6ee7b780':v===3?'#fbbf2480':'#fb718580'),borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:gridColor},ticks:{color:labelColor,font:{size:9}}},y:{grid:{color:gridColor},ticks:{color:labelColor,font:{size:11}},min:0,max:6}}}
+    });
+  }
+
+  // Counselor pie
+  const pieCtx = document.getElementById('counselorPieChart');
+  if(pieCtx) new Chart(pieCtx, {
+    type:'doughnut',
+    data:{
+      labels:['😊 Happy','😐 Neutral','😤 Stressed','😰 Anxious','😔 Lonely'],
+      datasets:[{data:[42,23,18,10,7],backgroundColor:['#6ee7b780','#94a3b880','#fb718580','#fbbf2480','#818cf880'],borderColor:['#6ee7b7','#94a3b8','#fb7185','#fbbf24','#818cf8'],borderWidth:2}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:labelColor,font:{family:'DM Sans',size:11},padding:10}}},cutout:'65%'}
+  });
+
+  // Counselor line
+  const lineCtx = document.getElementById('counselorLineChart');
+  if(lineCtx) new Chart(lineCtx, {
+    type:'line',
+    data:{
+      labels:['Week 1','Week 2','Week 3','Week 4'],
+      datasets:[
+        {label:'😊 Happy',data:[45,48,42,50],borderColor:'#6ee7b7',tension:.4,fill:false,pointRadius:5,pointBackgroundColor:'#6ee7b7'},
+        {label:'😤 Stressed',data:[20,22,28,18],borderColor:'#fb7185',tension:.4,fill:false,pointRadius:5,pointBackgroundColor:'#fb7185'},
+        {label:'😰 Anxious',data:[12,10,15,8],borderColor:'#fbbf24',tension:.4,fill:false,pointRadius:5,pointBackgroundColor:'#fbbf24'},
+        {label:'😔 Lonely',data:[8,7,6,5],borderColor:'#818cf8',tension:.4,fill:false,pointRadius:5,pointBackgroundColor:'#818cf8'}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:labelColor,font:{family:'DM Sans',size:11}}}},scales:{x:{grid:{color:gridColor},ticks:{color:labelColor}},y:{grid:{color:gridColor},ticks:{color:labelColor},min:0,max:60}}}
+  });
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.onload = function() {
+  updateDate();
+  const savedLang = localStorage.getItem('mb_lang') || 'en';
+  document.getElementById('langSelect').value = savedLang;
+  state.lang = savedLang;
+};
+</script>
+</body>
+</html>
